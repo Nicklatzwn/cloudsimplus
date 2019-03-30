@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Edge_Servers_Info extends Device_Info {
 
-	private double radious=10.0;
+	private double radious=100.0;
 	private double func;
 	private List<Integer> signal_strength;
 	
