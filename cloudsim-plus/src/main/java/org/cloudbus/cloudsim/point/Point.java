@@ -35,6 +35,14 @@ public class Point {
 	public Point() {
 		this.x=rangeMin + (rangeMax - rangeMin) * (new Random()).nextDouble();
 		this.y=rangeMin + (rangeMax - rangeMin) * (new Random()).nextDouble();
+		coordinates_x=new ArrayList<Integer>();
+		coordinates_y=new ArrayList<Integer>();
+		long longValue_x = Math.round(x);
+		long longValue_y = Math.round(y);
+		int intValue_x = (int) longValue_x;
+		int intValue_y = (int) longValue_y;
+		coordinates_x.add(intValue_x);
+		coordinates_y.add(intValue_y);
 	}
 	
 	public double getxPoint() {
