@@ -34,6 +34,8 @@ import org.cloudsimplus.listeners.EventInfo;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
+import javax.swing.JFrame;
+
 import static java.lang.Math.*;
 import org.cloudbus.cloudsim.core.events.SimEvent;
 import org.cloudsimplus.listeners.EventListener;
@@ -124,6 +126,7 @@ public Nickolas() {
 	finishedCloudletsatall = new ArrayList<Cloudlet>();
 	//Read Input
 	 read_file();
+	 //Coordinates_of_the_Mobiles
    
 	 System.out.println("Starting " + getClass().getSimpleName());
      simulation = new CloudSim();
@@ -273,7 +276,6 @@ private void check(double time) {
 		for(int id_mob=0; id_mob<Mobiles_Info_List.size(); id_mob++) {
 			if(Math.pow(Mobiles_Info_List.get(id_mob).getDatacenter().getPoint().getxPoint()- Edge_Servers_Info_List.get(id_edge).getDatacenter().getPoint().getxPoint(),2)+Math.pow(Mobiles_Info_List.get(id_mob).getDatacenter().getPoint().getyPoint()-Edge_Servers_Info_List.get(id_edge).getDatacenter().getPoint().getyPoint(),2) < Math.pow(Edge_Servers_Info_List.get(id_edge).get_radious(),2)) {
 				Mobiles_Info_List.get(id_mob).add_edge_point_to_mobile(id_edge);
-				nickos++;
 			}
 		}	
 	}
@@ -499,6 +501,7 @@ private void print_results() {
 		System.out.printf("\t\t------------------------\n");
 	}
 	Mobiles_Info_List.forEach(mobile->mobile.show_the_plots());
+	show_the_footprints();
 	System.out.println(getClass().getSimpleName() + " finished!");
 	System.out.printf("\t\t----->>> %d", nickos);
 }
@@ -652,6 +655,7 @@ private void onClockTickListener(EventInfo eventInfo) {
 				information.addPower(energy_density);
 				information.set_prev_Energy(power_temp);
 				information.add_to_the_cpu_energy_plot(eventInfo.getTime(), energy_density);
+				nickos++;
 			}
 			
 			
@@ -772,6 +776,37 @@ private VerticalVmScaling createVerticalPeScaling() {
 
     return verticalCpuScaling;
 }
+
+private void show_the_footprints() {
+	ArrayList<ArrayList<Integer>> coordinates_x= new ArrayList<ArrayList<Integer>>();
+	List<ArrayList<Integer>> coordinates_y= new ArrayList<ArrayList<Integer>>();
+	List<Integer> coordinates_edge_x= new ArrayList<Integer>();
+	List<Integer> coordinates_edge_y= new ArrayList<Integer>();
+	List<Integer> radious= new ArrayList<Integer>();
+	for(Mobiles_Info mobile:Mobiles_Info_List) {
+		coordinates_x.add((ArrayList<Integer>) mobile.getDatacenter().getPoint().get_coordinates_List_x());
+		coordinates_y.add((ArrayList<Integer>) mobile.getDatacenter().getPoint().get_coordinates_List_y());
+	}
+	for(Edge_Servers_Info edge:Edge_Servers_Info_List) {
+		double x=edge.getDatacenter().getPoint().getxPoint();
+		double y=edge.getDatacenter().getPoint().getyPoint();
+		long longValue_x = Math.round(x);
+		int intValue_x = (int) longValue_x;
+		long longValue_y = Math.round(y);
+		int intValue_y = (int) longValue_y;
+		coordinates_edge_x.add(intValue_x);
+		coordinates_edge_y.add(intValue_y);
+		double r=edge.get_radious();
+		long rad =Math.round(r);
+		int R = (int) rad;
+		radious.add(R);
+	}
+	Points graph = new Points(coordinates_x,coordinates_y,coordinates_edge_x,coordinates_edge_y,radious);
+	JFrame frame = new JFrame("Points");
+	frame.add(graph);
+	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	frame.setSize(300, 300);
+    frame.setLocationRelativeTo(null);
+    frame.setVisible(true);
+	}
 }
-
-

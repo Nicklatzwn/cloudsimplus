@@ -7,31 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import java.util.Comparator;
-
-import org.jfree.chart.ChartUtilities;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.ui.RefineryUtilities;
 import java.awt.Color;
-import java.awt.BasicStroke;
-
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.ui.ApplicationFrame;
-import org.jfree.ui.RefineryUtilities;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.cloudbus.cloudsim.plotter.Plotter;
-
-import java.util.*;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.File;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Mobiles_Info extends Device_Info{
 
