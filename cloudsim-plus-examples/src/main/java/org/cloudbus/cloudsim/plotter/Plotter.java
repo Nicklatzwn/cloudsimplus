@@ -4,7 +4,6 @@ package org.cloudbus.cloudsim.plotter;
  * Created by Latzwn on 29/03/2019.
  */
 
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
