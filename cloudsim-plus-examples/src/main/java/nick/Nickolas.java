@@ -805,7 +805,7 @@ private void show_the_footprints() {
 	JFrame frame = new JFrame("Points");
 	frame.add(graph);
 	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	frame.setSize(300, 300);
+	frame.setSize(500, 500);
     frame.setLocationRelativeTo(null);
     frame.setVisible(true);
 	}
