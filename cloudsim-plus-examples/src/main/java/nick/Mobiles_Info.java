@@ -1,4 +1,4 @@
-package nick;
+package org.cloudbus.cloudsim.nickos;
 
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import java.util.Random;
@@ -15,6 +15,7 @@ import org.cloudbus.cloudsim.plotter.Plotter;
 public class Mobiles_Info extends Device_Info{
 
 	private int BATTERY_LIFE; 
+	private int start_battery;
     private final int BATTERY_REDUCE_EXE=10;
     private final int BATTERY_REDUCE_SEND_RECEIVE_WIFI=1;
     private final int BATTERY_REDUCE_SEND_RECEIVE_3G=2;
@@ -44,6 +45,7 @@ public class Mobiles_Info extends Device_Info{
 		super(datacenter);
 		// TODO Auto-generated constructor stub
 		this.BATTERY_LIFE=BATTERY_LIFE;
+		start_battery=BATTERY_LIFE;
 		super.getDatacenter().getPoint().set_limit(limit);
 		list_of_belonging_cloudlets=new ArrayList<Cloudlet>();
 		list_of_cloudlets_that_are_going_to_be_submitted=new ArrayList<Cloudlet>();
@@ -251,5 +253,8 @@ public class Mobiles_Info extends Device_Info{
             win.setVisible(true);
             i++;
         }
+	}
+	public int start_battery() {
+		return start_battery;
 	}
 }

@@ -1,4 +1,4 @@
-package nick;
+package org.cloudbus.cloudsim.nickos;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -14,7 +14,7 @@ public class Points extends JPanel {
 	private List<Integer> coordinates_edge_x;
 	private List<Integer> coordinates_edge_y;
 	private List<Integer> radious;
-	private final int step=50;
+	private final int step=100;
 	
 	public Points(List<ArrayList<Integer>> coordinates_x,List<ArrayList<Integer>> coordinates_y,List<Integer> coordinates_edge_x,List<Integer> coordinates_edge_y,List<Integer> radious) {
 		this.coordinates_x=coordinates_x;

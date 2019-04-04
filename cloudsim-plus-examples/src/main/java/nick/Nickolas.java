@@ -1,4 +1,4 @@
-package nick;
+package org.cloudbus.cloudsim.nickos;
 
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
@@ -79,13 +79,13 @@ public class Nickolas {
     
     private int createsVms = 0;
     
-    private static final int HOSTS = 4;
+    private static final int HOSTS = 2;
     
     private static final int NUMBER_OF_VMS = 2;
     
     private static final double DATACENTER_SCHEDULING_INTERVAL = 1;
     
-    private static final int HOST_PES = 50;
+    private static final int HOST_PES = 2;
     
     private static final int Num_Of_Mobiles=4;
     
@@ -113,6 +113,7 @@ public class Nickolas {
     List<Mobiles_Info> Temp_List_Of_The_Best_Mobiles;
     double prev_time=0;
     private double sum_of_sq;
+    private final int start_battery=2000;
     private int nickos=0;
     
 public static void main(String[] args) {
@@ -210,7 +211,7 @@ private void set_Datacenters_and_brokers() {
 	for(int i=0; i<Num_Of_Mobiles; i++) {
 		int x=(new Random()).nextInt(number);
 		int y=(new Random()).nextInt(number);
-		Mobiles_Info_List.add(new Mobiles_Info(createDatacenter(6,x,y),2000,i,number));
+		Mobiles_Info_List.add(new Mobiles_Info(createDatacenter(6,x,y),start_battery,i,number));
 		Mobiles_Info_List.get(Mobiles_Info_List.size()-1).getDatacenter().setName("Mobile_Device_"+i);
 		energy_cpu_for_hosts(Mobiles_Info_List.get(Mobiles_Info_List.size()-1));
 	}
@@ -225,7 +226,7 @@ private void set_Datacenters_and_brokers() {
 	Edge_Servers_Info_List.get(Edge_Servers_Info_List.size()-1).getDatacenter().setName("Edge_Server_3");
 	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(4,number_2,number_2)));
 	Edge_Servers_Info_List.get(Edge_Servers_Info_List.size()-1).getDatacenter().setName("Edge_Server_4");
-	Cloud_Servers_Info_List.add(new Cloud_Servers_Info(createDatacenter(5,1000,1000),100));
+	Cloud_Servers_Info_List.add(new Cloud_Servers_Info(createDatacenter(5,1000,1000),20,100));
 	Cloud_Servers_Info_List.get(Cloud_Servers_Info_List.size()-1).getDatacenter().setName("Cloud_Server");
 
     //Second_step
@@ -279,7 +280,6 @@ private void check(double time) {
 			}
 		}	
 	}
-	
 	for(Mobiles_Info info:Mobiles_Info_List) {
 		if(!info.get_edge_point_to_mobile().isEmpty()) {
 			compute_objective_fuction_for_this_mobile(info);
@@ -305,19 +305,7 @@ private void check(double time) {
 		Temp_List_Of_The_Best_Mobiles.clear();
 		for(Mobiles_Info info:Temp_List_Of_Mobiles) compute_objective_fuction_for_this_mobile(info);
 	}
-	
-	Comparator<Mobiles_Info> sort_by_battery= comparingLong(mobile->mobile.get_Battery());
-	Temp_List_Of_Lonely_Mobiles.sort(sort_by_battery);
-	if(!Temp_List_Of_Lonely_Mobiles.isEmpty()) {
-		Cloud_Servers_Info_List.get(0).execute_the_cloudlets_from_mobile_to_main_Cloud_Server(Temp_List_Of_Lonely_Mobiles.get(0));
-		Temp_List_Of_Lonely_Mobiles.get(0).reduce_by_send_recieve_to_Cloud_Server();
-		Temp_List_Of_Lonely_Mobiles.get(0).add_to_the_battery_plot(time);
-		Temp_List_Of_Lonely_Mobiles.get(0).add_3g_power(Cloud_Servers_Info_List.get(0).get_E_speed(), time);
-	}
-	for(int i=1; i<Temp_List_Of_Lonely_Mobiles.size(); i++) {
-		Temp_List_Of_Lonely_Mobiles.get(i).execute_your_own_tasks();
-	}
-	
+	check_balance_between_lonely_mobiles_and_cloud_server(Temp_List_Of_Lonely_Mobiles,time);
 	Mobiles_Info_List.forEach(mobile->mobile.clear_edge_point_and_uncheck_mobile_and_submitted_list_of_cloudlets());
 	Temp_List_Of_Minimum_Values.clear();
 	Temp_List_Of_The_Best_Edges.clear();
@@ -450,22 +438,47 @@ private double calculate_assosiativity(Edge_Servers_Info inform,Mobiles_Info inf
 	return distance/Math.sqrt(Math.pow(v_speed_x, 2)+Math.pow(v_speed_y, 2));
 }
 
-private double computation_of_standard_deviation(Edge_Servers_Info inform) {
+private double computation_of_m_for_standard_deviation(List<Edge_Servers_Info> inform_list) {
+//	sum_of_sq=0.0;
+	double m=0;
+	ArrayList<Double> total_mips_for_vms=new ArrayList<Double>();
+	ArrayList<Double> total_capacity_mips_for_vms=new ArrayList<Double>();
+	for(Edge_Servers_Info edge:inform_list) {
+		if(edge.getBroker().getVmCreatedList().isEmpty()) m+=0;
+		else {
+			edge.getBroker().getVmCreatedList().forEach(vm-> {
+				total_mips_for_vms.add(vm.getTotalCpuMipsUsage());
+				total_capacity_mips_for_vms.add(vm.getTotalMipsCapacity());		
+			});
+		double total_mips=total_mips_for_vms.stream().count();
+		double total_current_mips=total_capacity_mips_for_vms.stream().count();
+		m+=total_current_mips/total_mips;
+		total_mips_for_vms.clear();
+		total_capacity_mips_for_vms.clear();
+		}		
+	}
+	return m;
+//	double m=list_of_values.stream().count()/list_of_values.size();
+//	list_of_values.forEach(val-> sum_of_sq+=Math.pow(val-m,2));
+//	return sum_of_sq/Math.sqrt(list_of_values.size());	
+}
+
+private double computation_of_standard_deviation(Edge_Servers_Info edge,List<Cloudlet> cloudlets_to_add,double m,int number_of_edge_points) {
 	sum_of_sq=0.0;
-	ArrayList<Double> list_of_values=new ArrayList<Double>();
-	
-	if(inform.getBroker().getVmCreatedList().isEmpty()) {
-		for(int i=0; i<inform.getBroker().getVmWaitingList().size()-1; i++) list_of_values.add(0.0);
-	}
+	double s=0;
+	ArrayList<Double> total_mips_for_vms=new ArrayList<Double>();
+	ArrayList<Double> total_capacity_mips_for_vms=new ArrayList<Double>();
+	if(edge.getBroker().getVmCreatedList().isEmpty()) s+=0;
 	else {
-	inform.getBroker().getVmCreatedList().forEach(vm-> {
-			list_of_values.add(vm.getTotalCpuMipsUsage()/vm.getTotalMipsCapacity());		
-	});
+		edge.getBroker().getVmCreatedList().forEach(vm-> {
+			total_mips_for_vms.add(vm.getTotalCpuMipsUsage());
+			total_capacity_mips_for_vms.add(vm.getTotalMipsCapacity());		
+		});
 	}
-	double m=list_of_values.stream().count()/list_of_values.size();
-	list_of_values.forEach(val-> sum_of_sq+=Math.pow(val-m,2));
-	return sum_of_sq/Math.sqrt(list_of_values.size());
-	
+	double total_mips=total_mips_for_vms.stream().count();
+	double total_current_mips=total_capacity_mips_for_vms.stream().count();
+	s=
+
 }
 		
 private void print_results() {
@@ -578,7 +591,6 @@ private List<Cloudlet> createCloudlets(int cloudlets,int pesNumber) {
             .setSubmissionDelay(delay);
     list.add(cloudlet);
 	}
-	
     return list;
 }
 
@@ -734,7 +746,7 @@ private void take_finished_cloudlets_from_all_brokers(double time) {
 		temp_cloudlets.addAll(information.getBroker().getCloudletFinishedList());
 		information.getBroker().getCloudletFinishedList().clear();
 		temp_cloudlets.removeAll(finishedCloudletsatall);
-		Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets,2,information.get_E_speed(), time));
+		Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets,2,information.get_download_speed(), time));
 
 	for(Cloudlet cloudlet:temp_cloudlets) {
 		averageResponseTime+=cloudlet.getActualCpuTime();
@@ -809,4 +821,32 @@ private void show_the_footprints() {
     frame.setLocationRelativeTo(null);
     frame.setVisible(true);
 	}
+
+
+private void check_balance_between_lonely_mobiles_and_cloud_server(List<Mobiles_Info> list_of_lonely_mobiles,double time) {
+	for(Mobiles_Info mobile:list_of_lonely_mobiles) {
+		if(mobile.get_Battery()<0.3*mobile.start_battery()) Cloud_Servers_Info_List.get(0).execute_the_cloudlets_from_mobile_to_main_Cloud_Server(mobile);
+		else {
+			double total_mips_to_submit=0, total_file_size_input=0, total_file_size_ouput=0;
+			for(Cloudlet cloudlet:mobile.get_the_list_of_cloudlets_that_are_going_to_be_submitted()) {
+			total_mips_to_submit+=cloudlet.getLength();
+			total_file_size_input+=cloudlet.getFileSize();
+			total_file_size_ouput+=cloudlet.getOutputSize();	
+			}
+			double t_mob=total_mips_to_submit/vm_total_list.get(mobile.get_mob_id()).get(0).getTotalMipsCapacity();
+			double t_send_to_cloud_server=total_file_size_input/Cloud_Servers_Info_List.get(0).get_upload_speed();
+			double t_exe_to_cloud_server=total_mips_to_submit/vm_total_list.get(Num_Of_Mobiles+Num_Of_Edge_Servers).get(0).getTotalMipsCapacity();
+			double t_get_the_response_from_cloud_server=total_file_size_ouput/Cloud_Servers_Info_List.get(0).get_download_speed();
+			double t_send_ex_get_cloud_server=t_send_to_cloud_server+t_exe_to_cloud_server+t_get_the_response_from_cloud_server;
+			if(t_send_ex_get_cloud_server<=t_mob)  {
+				Cloud_Servers_Info_List.get(0).execute_the_cloudlets_from_mobile_to_main_Cloud_Server(mobile);
+				mobile.reduce_by_send_recieve_to_Cloud_Server();
+				mobile.add_to_the_battery_plot(time);
+				mobile.add_3g_power(Cloud_Servers_Info_List.get(0).get_upload_speed(), time);
+			}
+			else mobile.execute_your_own_tasks();
+		}
+	}
 }
+}
+
