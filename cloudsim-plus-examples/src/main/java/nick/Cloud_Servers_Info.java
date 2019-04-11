@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.nickos;
+package nick;
 
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 
