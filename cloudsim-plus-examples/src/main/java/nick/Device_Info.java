@@ -1,33 +1,38 @@
-package org.cloudbus.cloudsim.nickos;
+package nick;
 
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
+import java.util.List;
+import java.util.ArrayList;
 
 public abstract class Device_Info {
 	private Datacenter datacenter;
 	private double TotalPower;
 	private DatacenterBroker broker;
-	private double temp_prev_energy;
-	private double averageResponseTime;
+	private double TotalResponseTime;
 	private int size;
+	private List<Double> ΑverageResponseTime;
+	private List<Double> Times;
 	
 	public Device_Info(Datacenter datacenter) {
 		this.datacenter=datacenter;
 		TotalPower=0.0;
-		temp_prev_energy=0.0;
-		averageResponseTime=0.0;
+		TotalResponseTime=0.0;
 		size=0;
-	}
-	
-	public void addPower(double Power) {
-		TotalPower+=(Power/1000000);
+		ΑverageResponseTime = new ArrayList<Double>();
+		Times = new ArrayList<Double>();
+		ΑverageResponseTime.add(0.0);
+		Times.add(0.0);
 	}
 	
 	public Datacenter getDatacenter() {
 		return datacenter;
 	}
-	public double getPower() {
+	public double getTotalPower() {
 		return TotalPower;
+	}
+	public void setTotalPower(double TotalPower) {
+		this.TotalPower=TotalPower;
 	}
 	public void setBroker(DatacenterBroker broker) {
 		this.broker=broker;
@@ -35,20 +40,28 @@ public abstract class Device_Info {
 	public DatacenterBroker getBroker() {
 		return broker;
 	}
-	public double get_prev_Energy() {
-		return temp_prev_energy;
-	}
-	public void set_prev_Energy(double temp_prev_energy) {
-		this.temp_prev_energy=temp_prev_energy;
-	}
-	public void add_responsetime_size(double ResponseTime,int s) {
-		averageResponseTime+=ResponseTime;
+	public void add_total_responsetime_size(double TotalResponseT,int s,double time) {
+		TotalResponseTime+=TotalResponseT;
 		size+=s;
+		if(s!=0) { 
+			ΑverageResponseTime.add(TotalResponseTime/size);
+			Times.add(time);
+		}
+		else {
+			ΑverageResponseTime.add(ΑverageResponseTime.get(ΑverageResponseTime.size()-1));
+			Times.add(time);
+		} 
 	}
-	public double response_time() {
-		return averageResponseTime;
+	public double get_total_response_time() {
+		return TotalResponseTime;
 	}
 	public int number_of_cloudlets() {
 		return size;
-	}	
+	}
+	public List<Double> get_the_ΑverageResponseTime_List() {
+		return ΑverageResponseTime;
+	}
+	public List<Double> get_the_Times_List() {
+		return Times;
+	}
 }
