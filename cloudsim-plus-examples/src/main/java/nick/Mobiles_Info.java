@@ -1,7 +1,11 @@
-package org.cloudbus.cloudsim.nickos;
+package nick;
 
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
+import javax.imageio.ImageIO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +14,12 @@ import java.util.Comparator;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.ui.RefineryUtilities;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.image.BufferedImage;
+import java.io.File;
+
 import org.cloudbus.cloudsim.plotter.Plotter;
+import org.cloudbus.cloudsim.power.models.PowerAware;
 
 public class Mobiles_Info extends Device_Info{
 
@@ -32,13 +41,14 @@ public class Mobiles_Info extends Device_Info{
 	private double energy_for_3g_module;
 	private int mob_id;
 	private boolean checked;
-	private double B_freq,B_idle;
+	private String path;
 	
 	//Plots
 	private final XYSeries CPU_SERIES;
 	private final XYSeries WIFI_SERIES;
 	private final XYSeries E_SERIES;
 	private final XYSeries BATTERY_SERIES;
+	private final XYSeries RESPONSE_SERIES;
 	
     
 	public Mobiles_Info(Datacenter datacenter,int BATTERY_LIFE,int mob_id,int limit) {
@@ -57,6 +67,7 @@ public class Mobiles_Info extends Device_Info{
 		WIFI_SERIES = new XYSeries("WIFI_Energy");
 		E_SERIES = new XYSeries("3G_Energy");
 		BATTERY_SERIES = new XYSeries("BATTERY");
+		RESPONSE_SERIES = new XYSeries("RESPONE");
 	}
 	public int get_Battery() {
 		return BATTERY_LIFE;
@@ -194,18 +205,6 @@ public class Mobiles_Info extends Device_Info{
 	public boolean is_checked() {
 		return checked;
 	}
-	public void set_cpu_B_freq(double B_freq) {
-		this.B_freq=B_freq;
-	}
-	public double get_cpu_B_freq() {
-		return B_freq;
-	}
-	public void set_cpu_B_idle(double B_idle) {
-		this.B_idle=B_idle;
-	}
-	public double get_cpu_B_idle() {
-		return B_idle;
-	}
 	public void add_to_the_battery_plot(double time) {
 		BATTERY_SERIES.add(time, BATTERY_LIFE);
 	}
@@ -218,43 +217,88 @@ public class Mobiles_Info extends Device_Info{
 	public void add_to_the_3g_energy_plot(double time,double E_energy) {
 		E_SERIES.add(time, E_energy);
 	}
-	public void show_the_plots() {
+	public void show_the_plots(double time) {
 		int r,g,b;
 		 //initializes Plotter
-		switch(mob_id) {
-			case 0:
-				g=b=0;
-				r=255;
-			case 1:
-				r=b=0;
-				g=255;
-			case 2:
-				r=g=0;
-				b=255;
-			default:
-				r=102;
-				g=0;
-				b=102;
-		}
+		r=(0+mob_id*10)%255;
+		g=(20+mob_id*30)%255;
+		b=(40+mob_id*50)%255;
 		List<Plotter> windowPlots = new ArrayList<>();
-		Plotter cpuWin = new Plotter(String.format("Energy_CPU of the Mobile:%d with total energy Sum:%6.2f",mob_id,super.getPower()), CPU_SERIES,new Color(r,g,b));
+		Plotter cpuWin = new Plotter(String.format("Energy_CPU of the Mobile:%d with total energy consumption %.0f Watt-Sec (%.5f KWatt-Hour) and Mean %.4f Watt-Sec",mob_id,super.getTotalPower(),PowerAware.wattsSecToKWattsHour(super.getTotalPower()),super.getTotalPower()/time), CPU_SERIES,new Color(r,g,b));
 		Plotter wifiWin = new Plotter(String.format("Energy_WIFI of the Mobile:%d with total energy Sum:%6.2f",mob_id,energy_for_Wifi_module), WIFI_SERIES,new Color(r,g,b));
 		Plotter EWin = new Plotter(String.format("Energy_3G of the Mobile:%d with total energy Sum:%6.2f",mob_id,energy_for_3g_module), E_SERIES,new Color(r,g,b));
 		Plotter BatteryWin = new Plotter(String.format("The Battery of the Mobile:%d",mob_id), BATTERY_SERIES,new Color(r,g,b));
+		List<Double> ΑverageResponseTime_List = get_the_ΑverageResponseTime_List();
+		List<Double> Times_List = get_the_Times_List();
+		double medianΑverageResponseTime=0;
+		for(int i=0; i<ΑverageResponseTime_List.size(); i++) {
+			RESPONSE_SERIES.add(Times_List.get(i),ΑverageResponseTime_List.get(i));
+			medianΑverageResponseTime+=ΑverageResponseTime_List.get(i);
+		}
+		medianΑverageResponseTime=medianΑverageResponseTime/ΑverageResponseTime_List.size();
+		Plotter averageWin =  new Plotter(String.format("Average Time for Tasks Execution of the Mobile:%d with median average response time:%6.2f",mob_id,medianΑverageResponseTime), RESPONSE_SERIES,new Color(r,g,b));
 		windowPlots.add(cpuWin);
         windowPlots.add(wifiWin);
         windowPlots.add(EWin);
         windowPlots.add(BatteryWin);
+        windowPlots.add(averageWin);
+        String name = get_the_path() + "Mobile_"+get_mob_id()+"/";
+        File TheInsDir = new File(name);
+        if(!TheInsDir.exists()) {
+   	 		try {
+   	 			TheInsDir.mkdir();
+   	 		}
+   	 		catch(SecurityException se){
+	        //handle it
+   	 		} 
+        }
         int i=0;
         for (Plotter win : windowPlots) {
-            win.pack();
-            //RefineryUtilities.centerFrameOnScreen(win);
-            RefineryUtilities.positionFrameOnScreen(win, i*0.1, i*0.1);
+            win.pack(); 
             win.setVisible(true);
+           //RefineryUtilities.centerFrameOnScreen(win);
+            RefineryUtilities.positionFrameOnScreen(win, i*0.1, i*0.1); 
+            try {
+            	TimeUnit.SECONDS.sleep(1);
+				getSaveSnapShot(win, name + "Mobile_" + get_mob_id() +"_" + i + ".png");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}       
             i++;
-        }
+        }      
 	}
 	public int start_battery() {
 		return start_battery;
 	}
+	public int get_random_length() {
+		return ThreadLocalRandom.current().nextInt(3000,5000);
+	}
+	public int get_random_filesize() {
+		return ThreadLocalRandom.current().nextInt(200,300);
+	}
+	public double get_random_delay() {
+		Random r = new Random();
+		double val=r.nextDouble()*1000;
+		int temp_val= (int) val;
+		return  temp_val/1000;	
+	}
+	public BufferedImage getScreenShot(Component component) {
+
+	    BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_INT_RGB);
+	    // paints into image's Graphics
+	    component.paint(image.getGraphics());
+	    return image;
+	}
+	public void getSaveSnapShot(Component component, String fileName) throws Exception {
+	        BufferedImage img = getScreenShot(component);
+	        // write the captured image as a PNG
+	        ImageIO.write(img, "png", new File(fileName));
+	  }
+	 public void set_the_path(String s) {
+		 path=s;
+	 }
+	 public String get_the_path() {
+		 return path;
+	 }
 }
