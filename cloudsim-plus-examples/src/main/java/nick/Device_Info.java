@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public abstract class Device_Info {
 	private Datacenter datacenter;
-	private double TotalPower;
+	private List<Double> TotalPower;
 	private DatacenterBroker broker;
 	private double TotalResponseTime;
 	private int size;
@@ -16,7 +16,7 @@ public abstract class Device_Info {
 	
 	public Device_Info(Datacenter datacenter) {
 		this.datacenter=datacenter;
-		TotalPower=0.0;
+		TotalPower= new ArrayList<Double>();
 		TotalResponseTime=0.0;
 		size=0;
 		ΑverageResponseTime = new ArrayList<Double>();
@@ -28,11 +28,11 @@ public abstract class Device_Info {
 	public Datacenter getDatacenter() {
 		return datacenter;
 	}
-	public double getTotalPower() {
-		return TotalPower;
+	public double getTotalPowerForTheHost(int index) {
+		return TotalPower.get(index);
 	}
-	public void setTotalPower(double TotalPower) {
-		this.TotalPower=TotalPower;
+	public void setTotalPower(double Power) {
+		TotalPower.add(Power);
 	}
 	public void setBroker(DatacenterBroker broker) {
 		this.broker=broker;
