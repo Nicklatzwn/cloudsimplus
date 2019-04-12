@@ -59,7 +59,7 @@ import java.util.*;
 public class Nickolas {
 	
 
-	private static final int TIME_TO_FINISH_SIMULATION=3600;
+	private static final int TIME_TO_FINISH_SIMULATION=300;
 	 /**
      * Number of Processor Elements (CPU Cores) of each Host.
      */
