@@ -59,7 +59,7 @@ import java.util.*;
 public class Nickolas {
 	
 
-	private static final int TIME_TO_FINISH_SIMULATION=300;
+	private static final int TIME_TO_FINISH_SIMULATION=3600;
 	 /**
      * Number of Processor Elements (CPU Cores) of each Host.
      */
@@ -115,7 +115,7 @@ public class Nickolas {
     private final double threshold_battery=0.01;
     private List<Double> max_power_for_the_mobiles;
     private List<Double> static_power_percent_for_the_mobiles;
-    private int radious_scale=40;
+    private int radious_scale=20;
     private String Results="C:/Users/nickl/Desktop/Results/";
     private int max_grid;
     private int nickos=0;
@@ -245,14 +245,14 @@ private void set_Datacenters_and_brokers() {
 	for(int i=0; i<Mobiles_Info_List.size(); i++) Mobiles_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Mobile_Broker_"+i));
     for(int i=0; i<Edge_Servers_Info_List.size(); i++) {
     	Edge_Servers_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Edge_Server_Broker_"+i));
-    	Edge_Servers_Info_List.get(i).add_zone(54);
-    	Edge_Servers_Info_List.get(i).add_zone(48);
-    	Edge_Servers_Info_List.get(i).add_zone(36);
-    	Edge_Servers_Info_List.get(i).add_zone(24);
-    	Edge_Servers_Info_List.get(i).add_zone(11);
-    	Edge_Servers_Info_List.get(i).add_zone(6);
-    	Edge_Servers_Info_List.get(i).add_zone(2);
-    	Edge_Servers_Info_List.get(i).add_zone(1);
+    	Edge_Servers_Info_List.get(i).add_zone(54,-64);
+    	Edge_Servers_Info_List.get(i).add_zone(48,-65);
+    	Edge_Servers_Info_List.get(i).add_zone(36,-69);
+    	Edge_Servers_Info_List.get(i).add_zone(24,-73);
+    	Edge_Servers_Info_List.get(i).add_zone(11,-75);
+    	Edge_Servers_Info_List.get(i).add_zone(6,-77);
+    	Edge_Servers_Info_List.get(i).add_zone(2,-79);
+    	Edge_Servers_Info_List.get(i).add_zone(1,-81);
     	//Set properly the radious
     	Edge_Servers_Info_List.get(i).set_radious(radious_scale*(i+1));  	
     }
@@ -334,7 +334,7 @@ private void check_the_mobile(Mobiles_Info mobile, Edge_Servers_Info the_best_ed
 	// TODO Auto-generated method stub
 		int temp2=mobile.get_the_list_of_cloudlets_that_are_going_to_be_submitted().size();
 		int perfect_data_zone=predict_the_zone(mobile,the_best_edge,0,0);
-		mobile.add_wifi_power_to_send_cloudlets(perfect_data_zone,time);
+		mobile.add_wifi_power_to_send_cloudlets(perfect_data_zone,the_best_edge.get_the_RSSI_Value(perfect_data_zone),time);
 		for(int i=0; i<temp2; i++) mobile.reduce_by_send_receive_wifi();
 		mobile.add_to_the_battery_plot(time);
 		the_best_edge.execute_the_cloudlets_from_mobile(mobile);
@@ -408,9 +408,9 @@ private int predict_the_zone(Mobiles_Info inform,Edge_Servers_Info info,double D
 	int i=0;
 	int temp=info.get_the_zones_lists().get(0);
 	while(Math.pow(x0-xmob, 2)+Math.pow(y0-ymob, 2)>Math.pow(info.get_radious(), 2)*(i+1)/info.get_the_zones_lists().size()) {
-		temp=info.get_the_zones_lists().get(i);
 		i++;
-		if(i==info.get_the_zones_lists().size()) break;
+		temp=info.get_the_zones_lists().get(i);
+		if(i==info.get_the_zones_lists().size()-1) break;
 	}
 	return temp;
 }
@@ -510,19 +510,19 @@ private void print_results() {
 	}
 	try {
 		PrintWriter writer = new PrintWriter(Results+"Mobiles_Edges_Cloud_Results.txt", "UTF-8");
-		writer.printf("\t\t\t\t\\t\t----------CLOUD_SERVER_INFO<<<<<----------\n");
+		writer.printf("\t\t\t\t\t\t---------->>>>>CLOUD_SERVER_INFO<<<<<----------\n");
 		for(Cloud_Servers_Info information:Cloud_Servers_Info_List) { 
 			writer.printf("\t\t------------------------\n");
 			writer.printf("\t\tIn: %s has executed %d Cloudlets with total response time %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.get_total_response_time());
 			writer.printf("\t\t------------------------\n");
 		}
-		writer.printf("\t\t\t\t\\t\t----------EDGE_SERVER_INFO<<<<<----------\n");
+		writer.printf("\t\t\t\t\t\t---------->>>>>EDGE_SERVER_INFO<<<<<----------\n");
 		for(Edge_Servers_Info information:Edge_Servers_Info_List) { 
 			writer.printf("\t\t------------------------\n");
 			writer.printf("\t\tIn: %s has executed %d Cloudlets with total response time %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.get_total_response_time());
 			writer.printf("\t\t------------------------\n");
 		}
-		writer.printf("\t\t\t\t\\t\t----------MOBILE_INFO<<<<<----------\n");
+		writer.printf("\t\t\t\t\t\t---------->>>>>MOBILE_INFO<<<<<----------\n");
 		for(Mobiles_Info information:Mobiles_Info_List) { 
 			writer.printf("\t\t------------------------\n");
 			writer.printf("\t\tIn: %s has executed %d Cloudlets with total response time %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.get_total_response_time());
@@ -691,10 +691,9 @@ private Host createPowerHost(long ram,long bw,long storage,List<Pe> peList) {
 
 private void checkMobileCpuUtilizationAndPowerConsumption() {
 	for(Mobiles_Info mobile:Mobiles_Info_List) {
-		int size_samples=mobile.getDatacenter().getHostList().get(0).getUtilizationHistory().size();
-		List<Double> CPU_ENERGY=new ArrayList<Double>(size_samples*mobile.getDatacenter().getHostList().size());
-		List<Double> TIME_FOR_CPU_ENERGY=new ArrayList<Double>(size_samples*mobile.getDatacenter().getHostList().size());
-		
+		List<Double> CPU_ENERGY=new ArrayList<Double>();
+		List<Double> TIME_FOR_CPU_ENERGY=new ArrayList<Double>();
+		int temp=0;
 		for(Host host:mobile.getDatacenter().getHostList()) {
 			final Map<Double, DoubleSummaryStatistics> utilizationPercentHistory = host.getUtilizationHistory();	
 			//time difference from the current to the previous line in the history
@@ -709,32 +708,17 @@ private void checkMobileCpuUtilizationAndPowerConsumption() {
 				prevTime = entry.getKey();
 				CPU_ENERGY.add(wattsPerInterval);
 				TIME_FOR_CPU_ENERGY.add(entry.getKey());
-			}					
-		}
-		List<Double> CPU_ENERGY_TOTAL=new ArrayList<Double>(size_samples);
-		List<Double> TIME_FOR_CPU_ENERGY_TOTAL=new ArrayList<Double>(size_samples);
-		for(int i=0; i<size_samples; i++) {
-			int temp=i;
-			double sum_cpu=0;
-			double sum_time=0;
-			while(temp<CPU_ENERGY.size()) {
-				sum_cpu+=CPU_ENERGY.get(temp);
-				sum_time+=TIME_FOR_CPU_ENERGY.get(temp);
-				temp+=size_samples;
 			}
-		CPU_ENERGY_TOTAL.add(sum_cpu);
-		TIME_FOR_CPU_ENERGY_TOTAL.add(sum_time/mobile.getDatacenter().getHostList().size());
-		
+			mobile.add_to_the_cpu_energy_plot_for_desired_host(temp);
+			double total_cpu_power=0;
+			for(int i=0; i<CPU_ENERGY.size(); i++) {
+				mobile.set_the_values_plot_for_cpu_energy_for_desired_host(TIME_FOR_CPU_ENERGY.get(i), CPU_ENERGY.get(i));
+				total_cpu_power+=CPU_ENERGY.get(i);	
+			}
+			mobile.setTotalPower(total_cpu_power);
+			temp++;		
 		}
-		double total_cpu_power=0;
-		for(int i=0; i<CPU_ENERGY_TOTAL.size(); i++) {
-			mobile.add_to_the_cpu_energy_plot(TIME_FOR_CPU_ENERGY_TOTAL.get(i), CPU_ENERGY_TOTAL.get(i));
-			total_cpu_power+=CPU_ENERGY_TOTAL.get(i);
-			
-		}
-		mobile.setTotalPower(total_cpu_power);
 	}
-	System.out.printf("\t\t----->>> %d", nickos);
 }
 
 private void onClockTickListener(EventInfo eventInfo) {
@@ -744,6 +728,10 @@ private void onClockTickListener(EventInfo eventInfo) {
 		if(counter_tick==0) {			
 			//Move Mobile_Device
 			Mobiles_Info_List.forEach(mobile -> mobile.getDatacenter().getPoint().move(Math.floor(eventInfo.getTime())-prev_time));
+			for(Mobiles_Info mobile:Mobiles_Info_List) {
+				mobile.add_zero_3g_power(eventInfo.getTime());
+				mobile.add_to_the_wifi_plot(eventInfo.getTime(),0);
+			}
 			prev_time=Math.floor(eventInfo.getTime());
 			take_finished_cloudlets_from_all_brokers(eventInfo.getTime());
 			counter_tick=1;
@@ -772,6 +760,11 @@ private void pauseSimulationAtSpecificTime(SimEvent simEvent) {
 }
 
 private void take_finished_cloudlets_from_all_brokers(double time) {
+	
+	List<Cloudlet> executed_cloudlets_sended_to_cloud=new ArrayList<Cloudlet>();
+	executed_cloudlets_sended_to_cloud.addAll(Cloud_Servers_Info_List.get(0).get_buffer_list());
+	Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(executed_cloudlets_sended_to_cloud, 2, Cloud_Servers_Info_List.get(0).get_download_speed() ,0 , time));
+	Cloud_Servers_Info_List.get(0).clear_buffer();
 
 	for(Mobiles_Info information:Mobiles_Info_List) {
 		double averageResponseTime=0.0;
@@ -780,7 +773,7 @@ private void take_finished_cloudlets_from_all_brokers(double time) {
 		temp_cloudlets.addAll(information.getBroker().getCloudletFinishedList());
 		information.getBroker().getCloudletFinishedList().clear();
 		temp_cloudlets.removeAll(finishedCloudletsatall);
-		Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets,0, 0, time));
+		Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets, 0, 0, 0, time));
 		for(Cloudlet cloudlet:temp_cloudlets) {
 				averageResponseTime+=cloudlet.getActualCpuTime();
 				size+=1;
@@ -795,8 +788,14 @@ private void take_finished_cloudlets_from_all_brokers(double time) {
 		temp_cloudlets.addAll(information.getBroker().getCloudletFinishedList());
 		information.getBroker().getCloudletFinishedList().clear();
 		temp_cloudlets.removeAll(finishedCloudletsatall);
-		
-		Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets,1,predict_the_zone(info,information, 0, 0), time));
+		for(Mobiles_Info info:Mobiles_Info_List) {
+			if(Math.pow(info.getDatacenter().getPoint().getxPoint()- information.getDatacenter().getPoint().getxPoint(),2)+Math.pow(info.getDatacenter().getPoint().getyPoint()-information.getDatacenter().getPoint().getyPoint(),2) < Math.pow(information.get_radious(),2)) {
+				int data_rate=predict_the_zone(info,information, 0, 0);
+				int RSSI=information.get_the_RSSI_Value(data_rate);
+				info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets, 1, data_rate, RSSI, time);	
+			}
+			else Cloud_Servers_Info_List.get(0).add_to_buffer(temp_cloudlets);
+		}
 	for(Cloudlet cloudlet:temp_cloudlets) {
 		averageResponseTime+=cloudlet.getActualCpuTime();
 		size+=1;
@@ -812,7 +811,7 @@ private void take_finished_cloudlets_from_all_brokers(double time) {
 		temp_cloudlets.addAll(information.getBroker().getCloudletFinishedList());
 		information.getBroker().getCloudletFinishedList().clear();
 		temp_cloudlets.removeAll(finishedCloudletsatall);
-		Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets,2,information.get_download_speed(), time));
+		Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets, 2, information.get_download_speed() ,0 , time));
 
 	for(Cloudlet cloudlet:temp_cloudlets) {
 		averageResponseTime+=cloudlet.getActualCpuTime();
@@ -954,7 +953,7 @@ private void check_balance_between_lonely_mobiles_and_cloud_server(List<Mobiles_
 				Cloud_Servers_Info_List.get(0).execute_the_cloudlets_from_mobile_to_main_Cloud_Server(mobile);
 				mobile.reduce_by_send_recieve_to_Cloud_Server();
 				mobile.add_to_the_battery_plot(time);
-				mobile.add_3g_power(Cloud_Servers_Info_List.get(0).get_upload_speed(), time);
+				mobile.add_3g_power(Cloud_Servers_Info_List.get(0).get_upload_speed(), time, t_send_to_cloud_server);
 			}
 			else mobile.execute_your_own_tasks();
 		} 
