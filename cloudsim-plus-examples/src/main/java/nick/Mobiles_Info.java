@@ -172,9 +172,8 @@ public class Mobiles_Info extends Device_Info{
 	}
 	private double calculate_the_wifi_energy(double t_trans,int RSSI) {
 		// TODO Auto-generated method stub
-		double Joule=(0.009 * Math.pow(RSSI, 2) - 0.7 * Math.abs(RSSI) + 14.87 ) * t_trans + 1.76;
-		double WiFiWatt=(Joule/t_trans);
-		return WiFiWatt;
+		double WiFiJoule=(0.009 * Math.pow(RSSI, 2) - 0.7 * Math.abs(RSSI) + 14.87 )  + 1.76;
+		return WiFiJoule;
 	}
 	public void add_wifi_power_to_receive_finished_cloudlets(int data_rate_of_the_zone,long total_length,int RSSI,double time) {
 		double T_trans=total_length/data_rate_of_the_zone;
@@ -226,10 +225,10 @@ public class Mobiles_Info extends Device_Info{
 		b=(40+mob_id*50)%255;
 		List<Plotter> windowPlots = new ArrayList<>();
 		for(int i=0; i<CPU_SERIES.size(); i++) {
-		Plotter cpuWin = new Plotter(String.format("Energy_CPU of the Mobile:%d for Host:%d with total energy consumption %.0f Watt (%.5f KWatt-Hour) and Mean %.4f Watt-Sec",mob_id,i, super.getTotalPowerForTheHost(i),PowerAware.wattsSecToKWattsHour(super.getTotalPowerForTheHost(i)),super.getTotalPowerForTheHost(i)/time), CPU_SERIES.get(i),new Color(r,g,b));
+		Plotter cpuWin = new Plotter(String.format("Energy_CPU of the Mobile:%d for Host:%d with total energy consumption: %.0f Watt (%.5f KWatt-Hour) and Mean %.4f Watt-Sec",mob_id,i, super.getTotalPowerForTheHost(i),PowerAware.wattsSecToKWattsHour(super.getTotalPowerForTheHost(i)),super.getTotalPowerForTheHost(i)/time), CPU_SERIES.get(i),new Color(r,g,b));
 		windowPlots.add(cpuWin);
 		}
-		Plotter wifiWin = new Plotter(String.format("Energy_WIFI of the Mobile:%d with total energy Sum:%6.2f Watt",mob_id,energy_for_Wifi_module), WIFI_SERIES,new Color(r,g,b));
+		Plotter wifiWin = new Plotter(String.format("Energy_WIFI of the Mobile:%d with total energy consumption: %6.4f Watt",mob_id,energy_for_Wifi_module/time), WIFI_SERIES,new Color(r,g,b));
 		Plotter EWin = new Plotter(String.format("Energy_3G of the Mobile:%d with total energy Sum:%6.2f Watt",mob_id,energy_for_3g_module), E_SERIES,new Color(r,g,b));
 		Plotter BatteryWin = new Plotter(String.format("The Battery of the Mobile:%d",mob_id), BATTERY_SERIES,new Color(r,g,b));
 		List<Double> ΑverageResponseTime_List = get_the_ΑverageResponseTime_List();
