@@ -110,6 +110,7 @@ public class Nickolas {
     List<Double> Temp_List_Of_Minimum_Values;
     List<Edge_Servers_Info> Temp_List_Of_The_Best_Edges;
     List<Mobiles_Info> Temp_List_Of_The_Best_Mobiles;
+    List<Mobiles_Info> Temp_List_Of_Not_Fit_Mobiles_To_Edges;
     double prev_time=0;
     private final int start_battery=3000;
     private final double threshold_battery=0.01;
@@ -215,6 +216,7 @@ private void set_Datacenters_and_brokers() {
 	Temp_List_Of_Minimum_Values =  new ArrayList<Double>();
 	Temp_List_Of_The_Best_Edges =  new ArrayList<Edge_Servers_Info>();
 	Temp_List_Of_The_Best_Mobiles = new ArrayList<Mobiles_Info>();
+	Temp_List_Of_Not_Fit_Mobiles_To_Edges = new ArrayList<Mobiles_Info>();
 	
 	max_power_for_the_mobiles = new ArrayList<Double>();
 	static_power_percent_for_the_mobiles = new ArrayList<Double>();
@@ -300,41 +302,51 @@ private void check(double time) {
 		if(!info.is_checked()) {
 			if(!info.get_edge_point_to_mobile().isEmpty()) {
 				compute_objective_fuction_for_this_mobile(info);
-				Temp_List_Of_Mobiles.add(info);
+				if(!Temp_List_Of_Not_Fit_Mobiles_To_Edges.contains(info))	Temp_List_Of_Mobiles.add(info);
 			}
 			else Temp_List_Of_Lonely_Mobiles.add(info);
-	}
+		}
 	}
 	
+	Temp_List_Of_Lonely_Mobiles.addAll(Temp_List_Of_Not_Fit_Mobiles_To_Edges);
+	Temp_List_Of_Not_Fit_Mobiles_To_Edges.forEach(mobile->mobile.checked());
+	
 	for(int i=0; i<Temp_List_Of_Mobiles.size(); i++) {
-		double s_min_of_min=Temp_List_Of_Minimum_Values.get(0);
-		int temp=0;
-		for(int j=1; j<Temp_List_Of_Minimum_Values.size(); j++) {
-			if(Temp_List_Of_Minimum_Values.get(j)<s_min_of_min) {
-				s_min_of_min=Temp_List_Of_Minimum_Values.get(j);
-				temp=j;
+		if(!Temp_List_Of_Minimum_Values.isEmpty()) {
+			double s_min_of_min=Temp_List_Of_Minimum_Values.get(0);
+			int temp=0;
+			for(int j=1; j<Temp_List_Of_Minimum_Values.size(); j++) {
+				if(Temp_List_Of_Minimum_Values.get(j)<s_min_of_min) {
+					s_min_of_min=Temp_List_Of_Minimum_Values.get(j);
+					temp=j;
 			}
 		}
-		Mobiles_Info mobile=Temp_List_Of_The_Best_Mobiles.get(temp);
-		Edge_Servers_Info edge=Temp_List_Of_The_Best_Edges.get(temp);
-		check_the_mobile(mobile,edge,time);
-		Temp_List_Of_Minimum_Values.clear();
-		Temp_List_Of_The_Best_Edges.clear();
-		Temp_List_Of_The_Best_Mobiles.clear();
-		for(Mobiles_Info info:Temp_List_Of_Mobiles) compute_objective_fuction_for_this_mobile(info);
+			Mobiles_Info mobile=Temp_List_Of_The_Best_Mobiles.get(temp);
+			Edge_Servers_Info edge=Temp_List_Of_The_Best_Edges.get(temp);
+			check_the_mobile(mobile,edge,time);
+			clear_the_temp_lists();
+		}
+			for(Mobiles_Info info:Temp_List_Of_Mobiles) compute_objective_fuction_for_this_mobile(info);
+			Temp_List_Of_Lonely_Mobiles.addAll(Temp_List_Of_Not_Fit_Mobiles_To_Edges);
+			Temp_List_Of_Not_Fit_Mobiles_To_Edges.forEach(mob->mob.checked());
 	}
 	check_balance_between_lonely_mobiles_and_cloud_server(Temp_List_Of_Lonely_Mobiles,time);
 	Mobiles_Info_List.forEach(mobile->mobile.clear_edge_point_and_uncheck_mobile_and_submitted_list_of_cloudlets());
+	clear_the_temp_lists();
+}
+
+private void clear_the_temp_lists() {
 	Temp_List_Of_Minimum_Values.clear();
 	Temp_List_Of_The_Best_Edges.clear();
 	Temp_List_Of_The_Best_Mobiles.clear();
+	Temp_List_Of_Not_Fit_Mobiles_To_Edges.clear();
 }
 		
 private void check_the_mobile(Mobiles_Info mobile, Edge_Servers_Info the_best_edge,double time) {
 	// TODO Auto-generated method stub
 		int temp2=mobile.get_the_list_of_cloudlets_that_are_going_to_be_submitted().size();
 		int perfect_data_zone=predict_the_zone(mobile,the_best_edge,0,0);
-		mobile.add_wifi_power_to_send_cloudlets(perfect_data_zone,the_best_edge.get_the_RSSI_Value(perfect_data_zone),time);
+		mobile.add_wifi_power_to_send_cloudlets(perfect_data_zone*1000000,the_best_edge.get_the_RSSI_Value(perfect_data_zone),time);
 		for(int i=0; i<temp2; i++) mobile.reduce_by_send_receive_wifi();
 		mobile.add_to_the_battery_plot(time);
 		the_best_edge.execute_the_cloudlets_from_mobile(mobile);
@@ -348,6 +360,7 @@ private void compute_objective_fuction_for_this_mobile(Mobiles_Info info) {
 				double speed_y=info.getDatacenter().getPoint().get_speed_y();
 				double s_fn;
 				double s_old=Double.MAX_VALUE;
+				int temp=0;
 				double m=computation_of_m_for_standard_deviation();
 				Edge_Servers_Info the_best_edge=Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(0));
 				for(int i=0; i<info.get_edge_point_to_mobile().size(); i++) {
@@ -357,21 +370,38 @@ private void compute_objective_fuction_for_this_mobile(Mobiles_Info info) {
 					double bytes_to_send=0.0,MI_to_exec=0.0,delay=0.0,bytes_to_send_back=0.0;
 					for(Cloudlet cloudlet:info.get_the_list_of_cloudlets_that_are_going_to_be_submitted()) { bytes_to_send+=cloudlet.getFileSize(); MI_to_exec+=cloudlet.getTotalLength(); delay+=cloudlet.getSubmissionDelay(); bytes_to_send_back+=cloudlet.getOutputSize(); }
 					double t_send=bytes_to_send/(zwnh_send*1000000);
-					double t_exec=compute_t_exec(Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),MI_to_exec);
-				
+					double t_exec=compute_t_exec(Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),MI_to_exec);			
 					double t_so_far=delay+t_send+t_exec;
-					int zwnh_receive=predict_the_zone(info,Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),t_so_far*speed_x,t_so_far*speed_y);
+					int zwnh_receive=predict_the_zone(info,Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),t_so_far*speed_x,t_so_far*speed_y);		
 					double t_send_back=bytes_to_send_back/(zwnh_receive*1000000);
-					s_fn=(t_send_back+t_so_far)/assosiativity+s;
-					if(s_fn<s_old) {
-						s_old=s_fn;
-						the_best_edge=Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i));
+					if(!check_if_the_mobile_is_going_to_stay_in_the_edge(info,Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),(t_send_back+t_so_far)*speed_x,(t_send_back+t_so_far)*speed_y))	temp++;
+					else {
+						s_fn=(t_send_back+t_so_far)/assosiativity+s;
+						if(s_fn<s_old) {
+							s_old=s_fn;
+							the_best_edge=Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i));
+						}
 					}
 			}
-				Temp_List_Of_Minimum_Values.add(s_old);
-				Temp_List_Of_The_Best_Edges.add(the_best_edge);
-				Temp_List_Of_The_Best_Mobiles.add(info);
+				if(temp==info.get_edge_point_to_mobile().size()) Temp_List_Of_Not_Fit_Mobiles_To_Edges.add(info);
+				else {
+					Temp_List_Of_Minimum_Values.add(s_old);
+					Temp_List_Of_The_Best_Edges.add(the_best_edge);
+					Temp_List_Of_The_Best_Mobiles.add(info);
+				}
 		}
+}
+
+private boolean check_if_the_mobile_is_going_to_stay_in_the_edge(Mobiles_Info info, Edge_Servers_Info edge_Servers_Info,double dx,double dy) {
+	// TODO Auto-generated method stub
+	double x_current=info.getDatacenter().getPoint().getxPoint();
+	double y_current=info.getDatacenter().getPoint().getyPoint();
+	double x_after=x_current+dx;
+	double y_after=y_current+dy;
+	if(Math.pow(x_after - edge_Servers_Info.getDatacenter().getPoint().getxPoint(),2)+Math.pow(y_after - edge_Servers_Info.getDatacenter().getPoint().getyPoint(),2) < Math.pow(edge_Servers_Info.get_radious(),2)) {
+		return true;
+	}
+	else return false;
 }
 
 private double compute_t_exec(Edge_Servers_Info edge_Servers_Info, double mI_to_exec) {
@@ -792,7 +822,7 @@ private void take_finished_cloudlets_from_all_brokers(double time) {
 			if(Math.pow(info.getDatacenter().getPoint().getxPoint()- information.getDatacenter().getPoint().getxPoint(),2)+Math.pow(info.getDatacenter().getPoint().getyPoint()-information.getDatacenter().getPoint().getyPoint(),2) < Math.pow(information.get_radious(),2)) {
 				int data_rate=predict_the_zone(info,information, 0, 0);
 				int RSSI=information.get_the_RSSI_Value(data_rate);
-				info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets, 1, data_rate, RSSI, time);	
+				info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets, 1, data_rate*1000000, RSSI, time);	
 			}
 			else Cloud_Servers_Info_List.get(0).add_to_buffer(temp_cloudlets);
 		}
