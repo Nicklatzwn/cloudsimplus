@@ -117,7 +117,7 @@ public class Nickolas {
     private List<Double> max_power_for_the_mobiles;
     private List<Double> static_power_percent_for_the_mobiles;
     private int radious_scale=20;
-    private String Results="C:/Users/nickl/Desktop/Results/";
+    private String Results="C:/Users/nickos/Desktop/Results/";
     private int max_grid;
     private int nickos=0;
     
@@ -240,21 +240,21 @@ private void set_Datacenters_and_brokers() {
 	Edge_Servers_Info_List.get(Edge_Servers_Info_List.size()-1).getDatacenter().setName("Edge_Server_3");
 	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_2,number_2)));
 	Edge_Servers_Info_List.get(Edge_Servers_Info_List.size()-1).getDatacenter().setName("Edge_Server_4");
-	Cloud_Servers_Info_List.add(new Cloud_Servers_Info(createDatacenter(20,1000,1000),speed_3g,2*speed_3g));
+	Cloud_Servers_Info_List.add(new Cloud_Servers_Info(createDatacenter(20,Math.pow(TIME_TO_FINISH_SIMULATION,2),Math.pow(TIME_TO_FINISH_SIMULATION,2)),speed_3g,2*speed_3g));
 	Cloud_Servers_Info_List.get(Cloud_Servers_Info_List.size()-1).getDatacenter().setName("Cloud_Server");
 
     //Second_step
 	for(int i=0; i<Mobiles_Info_List.size(); i++) Mobiles_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Mobile_Broker_"+i));
     for(int i=0; i<Edge_Servers_Info_List.size(); i++) {
     	Edge_Servers_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Edge_Server_Broker_"+i));
-    	Edge_Servers_Info_List.get(i).add_zone(54,-64);
-    	Edge_Servers_Info_List.get(i).add_zone(48,-65);
-    	Edge_Servers_Info_List.get(i).add_zone(36,-69);
-    	Edge_Servers_Info_List.get(i).add_zone(24,-73);
-    	Edge_Servers_Info_List.get(i).add_zone(11,-75);
-    	Edge_Servers_Info_List.get(i).add_zone(6,-77);
-    	Edge_Servers_Info_List.get(i).add_zone(2,-79);
-    	Edge_Servers_Info_List.get(i).add_zone(1,-81);
+    	Edge_Servers_Info_List.get(i).add_zone(5400,-64);
+    	Edge_Servers_Info_List.get(i).add_zone(4800,-65);
+    	Edge_Servers_Info_List.get(i).add_zone(3600,-69);
+    	Edge_Servers_Info_List.get(i).add_zone(2400,-73);
+    	Edge_Servers_Info_List.get(i).add_zone(1100,-75);
+    	Edge_Servers_Info_List.get(i).add_zone(600,-77);
+    	Edge_Servers_Info_List.get(i).add_zone(200,-79);
+    	Edge_Servers_Info_List.get(i).add_zone(100,-81);
     	//Set properly the radious
     	Edge_Servers_Info_List.get(i).set_radious(radious_scale*(i+1));  	
     }
@@ -325,10 +325,10 @@ private void check(double time) {
 			Edge_Servers_Info edge=Temp_List_Of_The_Best_Edges.get(temp);
 			check_the_mobile(mobile,edge,time);
 			clear_the_temp_lists();
-		}
 			for(Mobiles_Info info:Temp_List_Of_Mobiles) compute_objective_fuction_for_this_mobile(info);
 			Temp_List_Of_Lonely_Mobiles.addAll(Temp_List_Of_Not_Fit_Mobiles_To_Edges);
 			Temp_List_Of_Not_Fit_Mobiles_To_Edges.forEach(mob->mob.checked());
+		}
 	}
 	check_balance_between_lonely_mobiles_and_cloud_server(Temp_List_Of_Lonely_Mobiles,time);
 	Mobiles_Info_List.forEach(mobile->mobile.clear_edge_point_and_uncheck_mobile_and_submitted_list_of_cloudlets());
@@ -346,7 +346,7 @@ private void check_the_mobile(Mobiles_Info mobile, Edge_Servers_Info the_best_ed
 	// TODO Auto-generated method stub
 		int temp2=mobile.get_the_list_of_cloudlets_that_are_going_to_be_submitted().size();
 		int perfect_data_zone=predict_the_zone(mobile,the_best_edge,0,0);
-		mobile.add_wifi_power_to_send_cloudlets(perfect_data_zone*1000000,the_best_edge.get_the_RSSI_Value(perfect_data_zone),time);
+		mobile.add_wifi_power_to_send_cloudlets(perfect_data_zone,the_best_edge.get_the_RSSI_Value(perfect_data_zone),time);
 		for(int i=0; i<temp2; i++) mobile.reduce_by_send_receive_wifi();
 		mobile.add_to_the_battery_plot(time);
 		the_best_edge.execute_the_cloudlets_from_mobile(mobile);
@@ -369,18 +369,18 @@ private void compute_objective_fuction_for_this_mobile(Mobiles_Info info) {
 					double s=computation_of_standard_deviation(info.get_edge_point_to_mobile().get(i),info.get_the_list_of_cloudlets_that_are_going_to_be_submitted(),m);	
 					double bytes_to_send=0.0,MI_to_exec=0.0,delay=0.0,bytes_to_send_back=0.0;
 					for(Cloudlet cloudlet:info.get_the_list_of_cloudlets_that_are_going_to_be_submitted()) { bytes_to_send+=cloudlet.getFileSize(); MI_to_exec+=cloudlet.getTotalLength(); delay+=cloudlet.getSubmissionDelay(); bytes_to_send_back+=cloudlet.getOutputSize(); }
-					double t_send=bytes_to_send/(zwnh_send*1000000);
+					double t_send=bytes_to_send/(zwnh_send);
 					double t_exec=compute_t_exec(Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),MI_to_exec);			
 					double t_so_far=delay+t_send+t_exec;
 					int zwnh_receive=predict_the_zone(info,Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),t_so_far*speed_x,t_so_far*speed_y);		
-					double t_send_back=bytes_to_send_back/(zwnh_receive*1000000);
+					double t_send_back=bytes_to_send_back/(zwnh_receive);
 					if(!check_if_the_mobile_is_going_to_stay_in_the_edge(info,Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),(t_send_back+t_so_far)*speed_x,(t_send_back+t_so_far)*speed_y))	temp++;
 					else {
 						s_fn=(t_send_back+t_so_far)/assosiativity+s;
 						if(s_fn<s_old) {
 							s_old=s_fn;
 							the_best_edge=Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i));
-						}
+						}	
 					}
 			}
 				if(temp==info.get_edge_point_to_mobile().size()) Temp_List_Of_Not_Fit_Mobiles_To_Edges.add(info);
@@ -822,7 +822,7 @@ private void take_finished_cloudlets_from_all_brokers(double time) {
 			if(Math.pow(info.getDatacenter().getPoint().getxPoint()- information.getDatacenter().getPoint().getxPoint(),2)+Math.pow(info.getDatacenter().getPoint().getyPoint()-information.getDatacenter().getPoint().getyPoint(),2) < Math.pow(information.get_radious(),2)) {
 				int data_rate=predict_the_zone(info,information, 0, 0);
 				int RSSI=information.get_the_RSSI_Value(data_rate);
-				info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets, 1, data_rate*1000000, RSSI, time);	
+				info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(temp_cloudlets, 1, data_rate, RSSI, time);	
 			}
 			else Cloud_Servers_Info_List.get(0).add_to_buffer(temp_cloudlets);
 		}
