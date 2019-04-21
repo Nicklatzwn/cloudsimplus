@@ -2,6 +2,7 @@ package nick;
 
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -9,8 +10,14 @@ import javax.imageio.ImageIO;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+
 import org.jfree.data.xy.XYSeries;
 import org.jfree.ui.RefineryUtilities;
 import java.awt.Color;
@@ -39,6 +46,17 @@ public class Mobiles_Info extends Device_Info{
 	private int mob_id;
 	private boolean checked;
 	private String path;
+	private int low_input=200;
+	private int high_input=300;
+	//private final int Interval=10;
+	private double energy_wifi_temp=0;
+	private double prev_time_wifi=0;
+	private double prev_time_3g=0;
+	private double energy_3g_temp=0;
+	private double temp_time=0;
+	private double associativity;
+	private double real_total_time=0;
+	private boolean check_for_random=true;
 	
 	//Plots
 	private final List<XYSeries> CPU_SERIES;
@@ -66,6 +84,7 @@ public class Mobiles_Info extends Device_Info{
 		BATTERY_SERIES = new XYSeries("BATTERY");
 		RESPONSE_SERIES = new XYSeries("RESPONE");
 	}
+
 	public int get_Battery() {
 		return BATTERY_LIFE;
 	}
@@ -89,24 +108,30 @@ public class Mobiles_Info extends Device_Info{
 	}
 	public void find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(List<Cloudlet> cloudlets,int device_id,int data_rate_zone,int RSSI,double time) {
 		List<Cloudlet> temp_cloudlets = new ArrayList<>();
+		long output_size=0;
 		temp_cloudlets.addAll(list_of_belonging_cloudlets);
 		temp_cloudlets.retainAll(cloudlets);
-		for(Cloudlet cloudlet:temp_cloudlets) {
-			if(device_id==0) reduce_by_exe();
-			else if(device_id==1) {
-			reduce_by_send_receive_wifi();
-			reduce_by_idle();
-			add_wifi_power_to_receive_finished_cloudlets(data_rate_zone,cloudlet.getOutputSize(),RSSI,time);
+		if(!temp_cloudlets.isEmpty()) {
+			for(Cloudlet cloudlet:temp_cloudlets) {
+				if(device_id==0) reduce_by_exe();
+				else if(device_id==1) {
+					reduce_by_send_receive_wifi();
+					reduce_by_idle();
+				}
+				else {
+					reduce_by_send_recieve_to_Cloud_Server();
+					reduce_by_idle();
+				}
+				output_size+=cloudlet.getOutputSize();
 			}
-			else {
-				reduce_by_send_recieve_to_Cloud_Server();
-				reduce_by_idle();
-				double T_trans=cloudlet.getOutputSize()/data_rate_zone;
-				add_3g_power(data_rate_zone,time,T_trans);
+			if(device_id==1) add_wifi_power_to_receive_finished_cloudlets(data_rate_zone,output_size,RSSI,time);
+			else if(!(device_id==0)) {
+				double T_trans=output_size/data_rate_zone;
+				add_3g_power(time,T_trans);
 			}
+			add_to_the_battery_plot(time);
+			list_of_belonging_cloudlets.removeAll(cloudlets);
 		}
-		add_to_the_battery_plot(time);
-		list_of_belonging_cloudlets.removeAll(cloudlets);
 	}
 	public void add_edge_point_to_mobile(int id) {
 		pointer_to_Edge_Server.add(id);
@@ -155,20 +180,18 @@ public class Mobiles_Info extends Device_Info{
 	public void execute_your_own_tasks() {
 		super.getBroker().submitCloudletList(list_of_cloudlets_that_are_going_to_be_submitted);
 	}
-	public void add_energy_for_wifi_module(double energy) {
-		energy_for_Wifi_module+=energy;
-	}
+	
 	public double get_energy_for_wifi_module() {
 		return energy_for_Wifi_module;
 	}
 	public void add_wifi_power_to_send_cloudlets(int data_rate_of_the_zone,int RSSI,double time) {
-		int length=0;
+		long length=0;
 		for(Cloudlet cloudlet:list_of_cloudlets_that_are_going_to_be_submitted) length+=cloudlet.getFileSize();
 		double T_trans=length/data_rate_of_the_zone;
+		real_total_time+=T_trans;
 		double energy=calculate_the_wifi_energy(T_trans,RSSI);
-		add_energy_for_wifi_module(energy);
-		add_to_the_wifi_plot(time,energy);
-		
+		energy_for_Wifi_module+=energy;
+		add_to_the_wifi_plot(time,energy);	
 	}
 	private double calculate_the_wifi_energy(double t_trans,int RSSI) {
 		// TODO Auto-generated method stub
@@ -177,18 +200,26 @@ public class Mobiles_Info extends Device_Info{
 	}
 	public void add_wifi_power_to_receive_finished_cloudlets(int data_rate_of_the_zone,long total_length,int RSSI,double time) {
 		double T_trans=total_length/data_rate_of_the_zone;
+		real_total_time+=T_trans;
 		double energy=calculate_the_wifi_energy(T_trans,RSSI);
-		add_energy_for_wifi_module(energy);
+		energy_for_Wifi_module+=energy;
 		add_to_the_wifi_plot(time,energy);
 	}
-	public void add_3g_power(double f,double time,double T_trans) {
-		double energy=(20+0.0905*f)*T_trans;
-		add_to_the_3g_energy_plot(time,energy);
-		energy_for_3g_module+=energy;
+	public void add_wifi_idle_energy(double time,double dt) {
+		double power_idle=(0.1+0.1*(new Random()).nextDouble())*dt;
+		energy_for_Wifi_module+=power_idle;
+		add_to_the_wifi_plot(time,power_idle);
 	}
-	public void add_zero_3g_power(double time) {
-		add_to_the_3g_energy_plot(time,0);
-		energy_for_3g_module+=0;
+	public void add_3g_power(double time,double T_trans) {
+		double power_idle=(0.2+0.2*(new Random()).nextDouble())*T_trans;
+		double power_max=(40.5+0.7*(new Random()).nextDouble())*T_trans;
+		add_to_the_3g_energy_plot(time,power_max+power_idle);
+		energy_for_3g_module+=(power_max+power_idle);
+	}
+	public void add_idle_3g_power(double time,double dt) {
+		double power_idle=(0.2+0.2*(new Random()).nextDouble())*dt;
+		add_to_the_3g_energy_plot(time,power_idle);
+		energy_for_3g_module+=power_idle;
 	}
 	public double get_3g_power() {
 		return energy_for_3g_module;
@@ -206,7 +237,13 @@ public class Mobiles_Info extends Device_Info{
 		BATTERY_SERIES.add(time, BATTERY_LIFE);
 	}
 	public void add_to_the_wifi_plot(double time,double wifi_energy) {
-		WIFI_SERIES.add(time, wifi_energy);
+		energy_wifi_temp+=wifi_energy;
+		if(time-prev_time_wifi>Interval) {
+			WIFI_SERIES.add(prev_time_wifi, energy_wifi_temp/(time-prev_time_wifi));
+			WIFI_SERIES.add(time, energy_wifi_temp/(time-prev_time_wifi));
+			prev_time_wifi=time;
+			energy_wifi_temp=0;
+		}
 	}
 	public void add_to_the_cpu_energy_plot_for_desired_host(int index) {
 		CPU_SERIES.add(new XYSeries("CPU Energy For Host " + index));
@@ -215,7 +252,13 @@ public class Mobiles_Info extends Device_Info{
 		CPU_SERIES.get(CPU_SERIES.size()-1).add(time, energy);
 	}
 	public void add_to_the_3g_energy_plot(double time,double E_energy) {
-		E_SERIES.add(time, E_energy);
+		energy_3g_temp+=E_energy;
+		if(time-prev_time_3g>Interval) {
+			E_SERIES.add(prev_time_3g, energy_3g_temp/(time-prev_time_3g));
+			E_SERIES.add(time, energy_3g_temp/(time-prev_time_3g));
+			prev_time_3g=time;
+			energy_3g_temp=0;
+		}
 	}
 	public void show_the_plots(double time) {
 		int r,g,b;
@@ -229,17 +272,21 @@ public class Mobiles_Info extends Device_Info{
 		windowPlots.add(cpuWin);
 		}
 		Plotter wifiWin = new Plotter(String.format("Energy_WIFI of the Mobile:%d with total energy consumption: %6.4f Watt-Sec (%.5f KWatt-Hour) and Mean %.4f Watt-Sec",mob_id,energy_for_Wifi_module,PowerAware.wattsSecToKWattsHour(energy_for_Wifi_module),energy_for_Wifi_module/time), WIFI_SERIES,new Color(r,g,b));
-		Plotter EWin = new Plotter(String.format("Energy_3G of the Mobile:%d with total energy Sum:%6.2f Watt",mob_id,energy_for_3g_module), E_SERIES,new Color(r,g,b));
+		Plotter EWin = new Plotter(String.format("Energy_3G of the Mobile:%d with total energy Sum:%6.2f Watt-Sec (%.5f KWatt-Hour) and Mean %.4f Watt-Sec",mob_id,energy_for_3g_module,PowerAware.wattsSecToKWattsHour(energy_for_3g_module),energy_for_3g_module/time), E_SERIES,new Color(r,g,b));
 		Plotter BatteryWin = new Plotter(String.format("The Battery of the Mobile:%d",mob_id), BATTERY_SERIES,new Color(r,g,b));
 		List<Double> ΑverageResponseTime_List = get_the_ΑverageResponseTime_List();
 		List<Double> Times_List = get_the_Times_List();
+		if(Times_List.get(Times_List.size()-1)<time) {
+			ΑverageResponseTime_List.add(0.0);
+			Times_List.add(time);
+		}
 		double medianΑverageResponseTime=0;
 		for(int i=0; i<ΑverageResponseTime_List.size(); i++) {
 			RESPONSE_SERIES.add(Times_List.get(i),ΑverageResponseTime_List.get(i));
 			medianΑverageResponseTime+=ΑverageResponseTime_List.get(i);
 		}
 		medianΑverageResponseTime=medianΑverageResponseTime/ΑverageResponseTime_List.size();
-		Plotter averageWin =  new Plotter(String.format("Average Time for Tasks Execution of the Mobile:%d with median average response time:%6.2f Sec-(Executed Cloudlet)",mob_id,medianΑverageResponseTime), RESPONSE_SERIES,new Color(r,g,b));
+		Plotter averageWin =  new Plotter(String.format("Average Time for Tasks Execution of the Mobile:%d with median average response time:%6.2f Sec-(Executed Cloudlets)",mob_id,medianΑverageResponseTime), RESPONSE_SERIES,new Color(r,g,b));
         windowPlots.add(wifiWin);
         windowPlots.add(EWin);
         windowPlots.add(BatteryWin);
@@ -277,7 +324,7 @@ public class Mobiles_Info extends Device_Info{
 		return ThreadLocalRandom.current().nextInt(3000,5000);
 	}
 	public int get_random_filesize() {
-		return ThreadLocalRandom.current().nextInt(200,300);
+		return ThreadLocalRandom.current().nextInt(low_input,high_input);
 	}
 	public double get_random_delay() {
 		Random r = new Random();
@@ -302,5 +349,26 @@ public class Mobiles_Info extends Device_Info{
 	 }
 	 public String get_the_path() {
 		 return path;
+	 }
+	 public void set_temp_time_data_zone(double time,double associativity) {
+		 temp_time=time;
+		 this.associativity=associativity;
+	 }
+	 public double get_the_associativity() {
+		 return associativity;
+	 }
+	 public double get_temp_time() {
+		 double temp=temp_time;
+		 temp_time=0;
+		 return temp;
+	 }
+	 public double get_real_total_time() {
+		 return real_total_time;
+	 }
+	 public boolean check_for_random() {
+		 return check_for_random;
+	 }
+	 public void check_mobile_for_random(boolean temp) {
+		 check_for_random= temp;
 	 }
 }
