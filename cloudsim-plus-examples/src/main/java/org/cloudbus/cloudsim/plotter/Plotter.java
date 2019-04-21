@@ -4,6 +4,7 @@ package org.cloudbus.cloudsim.plotter;
  * Created by Latzwn on 29/03/2019.
  */
 
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -43,49 +44,28 @@ public class Plotter extends ApplicationFrame {
         chartPanel.setPreferredSize(new Dimension(500, 270));
         setContentPane(chartPanel);
     }
-
-    public Plotter(final String title, final XYDataset data, String yaxis) {
-
-        super(title);
-        final JFreeChart chart = createCombinedChart(data, yaxis, title);
-        final ChartPanel panel = new ChartPanel(chart, true, true, true, false, true);
-        panel.setPreferredSize(new java.awt.Dimension(500, 270));
-        setContentPane(panel);
-
-    }
-
-    private static JFreeChart createCombinedChart(XYDataset data1, String yAxis, String title) {
-
-        // create subplot 1...
-        final XYItemRenderer renderer1 = new StandardXYItemRenderer();
-        final NumberAxis rangeAxis1 = new NumberAxis(yAxis);
-        final XYPlot subplot1 = new XYPlot(data1, null, rangeAxis1, renderer1);
-        subplot1.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT);
-
-//        final XYTextAnnotation annotation = new XYTextAnnotation("Hello!", 50.0, 10000.0);
-//        annotation.setFont(new Font("SansSerif", Font.PLAIN, 9));
-//        annotation.setRotationAngle(Math.PI / 4.0);
-//        subplot1.addAnnotation(annotation);
-
-        // create subplot 2...
-//        final XYItemRenderer renderer2 = new StandardXYItemRenderer();
-//        final NumberAxis rangeAxis2 = new NumberAxis("Range 2");
-//        rangeAxis2.setAutoRangeIncludesZero(false);
-//        final XYPlot subplot2 = new XYPlot(data2, null, rangeAxis2, renderer2);
-//        subplot2.setRangeAxisLocation(AxisLocation.TOP_OR_LEFT);
-
-        // parent plot...
-        final CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis("Sample"));
-        plot.setGap(10.0);
-
-        // add the subplots...
-        plot.add(subplot1, 1);
-//        plot.add(subplot2, 1);
-        plot.setOrientation(PlotOrientation.VERTICAL);
-
-        // return a new chart containing the overlaid plot...
-        return new JFreeChart(title,
-            JFreeChart.DEFAULT_TITLE_FONT, plot, true);
-
-    }
+    
+    public Plotter(XYDataset y,double total_response_mobi_het,double total_response_random) {
+    	  super(String.format("Compare Mobi-Het with total Response Time: %.4f and Random with total Response Time: %.4f", total_response_mobi_het,total_response_random));
+    	  final JFreeChart chart = ChartFactory.createXYLineChart(String.format("Compare Mobi-Het with total Response Time: %.4f and Random with total Response Time: %.4f", total_response_mobi_het,total_response_random), "Time", "Response_Time", y, PlotOrientation.VERTICAL, true, true, false);
+    	  XYPlot plot;
+    	  plot = (XYPlot)chart.getPlot();
+          plot.getRenderer().setSeriesPaint(0, Color.BLACK);
+          plot.getRenderer().setSeriesPaint(1, Color.RED);
+          final ChartPanel chartPanel = new ChartPanel(chart);
+          chartPanel.setPreferredSize(new Dimension(500, 270));
+          setContentPane(chartPanel);
+   }
+    
+    public Plotter(double total_service_mobi_het,XYDataset y,double total_service_random) {
+  	  super(String.format("Compare Mobi-Het with total Service: %.4f and Random with total Service: %.4f", total_service_mobi_het,total_service_random));
+  	  final JFreeChart chart = ChartFactory.createXYLineChart(String.format("Compare Mobi-Het with total Service: %.4f and Random with total Service: %.4f", total_service_mobi_het,total_service_random), "Time", "Sevice", y, PlotOrientation.VERTICAL, true, true, false);
+  	  XYPlot plot;
+  	  plot = (XYPlot)chart.getPlot();
+        plot.getRenderer().setSeriesPaint(0, Color.BLUE);
+        plot.getRenderer().setSeriesPaint(1, Color.GREEN);
+        final ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(500, 270));
+        setContentPane(chartPanel);
+ }
 }
