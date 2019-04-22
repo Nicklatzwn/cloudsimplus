@@ -45,9 +45,9 @@ public class Plotter extends ApplicationFrame {
         setContentPane(chartPanel);
     }
     
-    public Plotter(XYDataset y,double total_response_mobi_het,double total_response_random) {
-    	  super(String.format("Compare Mobi-Het with total Response Time: %.4f and Random with total Response Time: %.4f", total_response_mobi_het,total_response_random));
-    	  final JFreeChart chart = ChartFactory.createXYLineChart(String.format("Compare Mobi-Het with total Response Time: %.4f and Random with total Response Time: %.4f", total_response_mobi_het,total_response_random), "Time", "Response_Time", y, PlotOrientation.VERTICAL, true, true, false);
+    public Plotter(final String title,XYDataset y,String title_y) {
+    	 super(title);
+    	  final JFreeChart chart = ChartFactory.createXYLineChart(title, "Time", title_y, y, PlotOrientation.VERTICAL, true, true, false);
     	  XYPlot plot;
     	  plot = (XYPlot)chart.getPlot();
           plot.getRenderer().setSeriesPaint(0, Color.BLACK);
@@ -56,16 +56,4 @@ public class Plotter extends ApplicationFrame {
           chartPanel.setPreferredSize(new Dimension(500, 270));
           setContentPane(chartPanel);
    }
-    
-    public Plotter(double total_service_mobi_het,XYDataset y,double total_service_random) {
-  	  super(String.format("Compare Mobi-Het with total Service: %.4f and Random with total Service: %.4f", total_service_mobi_het,total_service_random));
-  	  final JFreeChart chart = ChartFactory.createXYLineChart(String.format("Compare Mobi-Het with total Service: %.4f and Random with total Service: %.4f", total_service_mobi_het,total_service_random), "Time", "Sevice", y, PlotOrientation.VERTICAL, true, true, false);
-  	  XYPlot plot;
-  	  plot = (XYPlot)chart.getPlot();
-        plot.getRenderer().setSeriesPaint(0, Color.BLUE);
-        plot.getRenderer().setSeriesPaint(1, Color.GREEN);
-        final ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(500, 270));
-        setContentPane(chartPanel);
- }
 }
