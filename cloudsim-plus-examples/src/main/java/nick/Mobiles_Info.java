@@ -5,26 +5,16 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-
 import javax.imageio.ImageIO;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-
 import org.jfree.data.xy.XYSeries;
 import org.jfree.ui.RefineryUtilities;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
 import java.io.File;
-
 import org.cloudbus.cloudsim.plotter.Plotter;
 import org.cloudbus.cloudsim.power.models.PowerAware;
 
@@ -32,9 +22,9 @@ public class Mobiles_Info extends Device_Info{
 
 	private int BATTERY_LIFE; 
 	private int start_battery;
-    private final int BATTERY_REDUCE_EXE=10;
+    private final int BATTERY_REDUCE_EXE=15;
     private final int BATTERY_REDUCE_SEND_RECEIVE_WIFI=1;
-    private final int BATTERY_REDUCE_SEND_RECEIVE_3G=2;
+    private final int BATTERY_REDUCE_SEND_RECEIVE_3G=4;
     private final int BATTERY_REDUCE_IDLE_PERIOD=1;
     private List<Cloudlet> list_of_belonging_cloudlets;
     private List<Cloudlet> list_of_cloudlets_that_are_going_to_be_submitted;
@@ -56,6 +46,7 @@ public class Mobiles_Info extends Device_Info{
 	private double temp_time=0;
 	private double associativity;
 	private double real_total_time=0;
+	private double standard_deviation=0;
 	private boolean check_for_random=true;
 	
 	//Plots
@@ -212,7 +203,7 @@ public class Mobiles_Info extends Device_Info{
 	}
 	public void add_3g_power(double time,double T_trans) {
 		double power_idle=(0.2+0.2*(new Random()).nextDouble())*T_trans;
-		double power_max=(40.5+0.7*(new Random()).nextDouble())*T_trans;
+		double power_max=(2.5+0.7*(new Random()).nextDouble())*T_trans;
 		add_to_the_3g_energy_plot(time,power_max+power_idle);
 		energy_for_3g_module+=(power_max+power_idle);
 	}
@@ -350,9 +341,13 @@ public class Mobiles_Info extends Device_Info{
 	 public String get_the_path() {
 		 return path;
 	 }
-	 public void set_temp_time_data_zone(double time,double associativity) {
+	 public void set_temp_time_data_zone_standard_deviation(double time,double associativity,double standard_deviation) {
 		 temp_time=time;
 		 this.associativity=associativity;
+		 this.standard_deviation=standard_deviation;
+	 }
+	 public double get_the_standard_deviation() {
+		 return standard_deviation;
 	 }
 	 public double get_the_associativity() {
 		 return associativity;
