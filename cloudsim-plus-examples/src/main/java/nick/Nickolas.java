@@ -28,14 +28,8 @@ import org.cloudsimplus.autoscaling.VerticalVmScalingSimple;
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder;
 import org.cloudsimplus.listeners.CloudletVmEventInfo;
 import org.cloudsimplus.listeners.EventInfo;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
@@ -62,71 +56,58 @@ import java.util.*;
 
 public class Nickolas {
 	
-
-	private static final int TIME_TO_FINISH_SIMULATION=3600;
-	 /**
-     * Number of Processor Elements (CPU Cores) of each Host.
-     */
+	private static String Results="C:/Users/nickl/Desktop/Results/";
+	private static boolean Mobi_Het_And_Random_Compare=true;
+    private static boolean random=false;
     
+	private static final int TIME_TO_FINISH_SIMULATION=1800;
     private static final int NUMBER_OF_CLOUDLETS_DYNAMICALLY=1;
-    
-    /**
-     * Number of Cloudlets to create dynamically.
-     */
-    
     private static final int VM_PES_NUMBER = 2;
-    private static final int HOST_PES = 2;
-     
-    /**
-     * 
-     * Number of Cloudlets ID to create dynamically.
-     */
-    
-    private int cloudletId = -1;
-    
-    private int createsVms = 0;
-    private int createsDatacenters = 0;
-    
-    private static final double DATACENTER_SCHEDULING_INTERVAL = 10;
-    
+    private static final int HOST_PES = VM_PES_NUMBER;
+    private static final double DATACENTER_SCHEDULING_INTERVAL = 1; 
     private static final int Num_Of_Mobiles=20;
-    
     private final CloudSim simulation;
     private final List<Cloudlet> finishedCloudletsatall;
+    private final int time_to_change_direction=2;
+    private final int Interval=2;
+    private final int speed_3g=50;
+    private final int grid_value=850;
+    private final int start_battery=3000;
+    private final double threshold_battery=0.01;
+    private final int radious_scale=100;
+    private final int CHECK_TIMER = 5; // Interval time 
+    private final int CPI=5;
+    
+    private int no_fit_mobiles_counter=0;
+    private int cloudletId = -1;
+    private int createsVms = 0;
+    private int createsDatacenters = 0;
+    private int max_grid;
+    private double prev_time=0;
+    private double total_created_mips=0;
+    
     private List<Double> lista;
     private List<ArrayList<Vm>> vm_total_list;
     private List<List<Host>> host_total_list;
-    private int CHECK_TIMER = 5; // Interval time 
+    
     //Main Lists
     private List<Mobiles_Info> Mobiles_Info_List;
     private List<Edge_Servers_Info> Edge_Servers_Info_List;
     private List<Cloud_Servers_Info> Cloud_Servers_Info_List;
     //---------
-    private int CPI=5;
+    
     private int counter=0;
     private int counter_tick=0;
     private int counter_change_direction_of_the_mobiles=0;
-    private final int time_to_change_direction=2;
-    private int Interval=2;
-    private int speed_3g=100;
-    private final int grid_value=650;
+    
     List<Double> Temp_List_Of_Minimum_Values;
     List<Edge_Servers_Info> Temp_List_Of_The_Best_Edges;
     List<Mobiles_Info> Temp_List_Of_The_Best_Mobiles;
     List<Mobiles_Info> Temp_List_Of_Not_Fit_Mobiles_To_Edges;
-    double prev_time=0;
-    private final int start_battery=3000;
-    private final double threshold_battery=0.01;
     private List<Double> max_power_for_the_mobiles;
     private List<Double> static_power_percent_for_the_mobiles;
-    private int radious_scale=200;
-    private String Results="C:/Users/nickos/Desktop/Results/";
-    private int max_grid;
-    private boolean Mobi_Het_And_Random_Compare=true;
-    private boolean nickos=false;
-    
     private List<Double> mobi_het_total_time_edges;
-    private double real_total_time_edges;
+    private double real_total_time_edges=0;
     private double mobi_het_total_time_edges_var=0;
     private double random_total_time_edges_var=0;
     private double mobi_het_associativity=0;
@@ -148,6 +129,12 @@ public class Nickolas {
     
 public static void main(String[] args) {
     new Nickolas();
+    if(Mobi_Het_And_Random_Compare) {
+    	Mobi_Het_And_Random_Compare=false;
+    	random=true;
+    	Results="C:/Users/nickl/Desktop/Results/Random/";
+    	new Nickolas();
+    } 
 }
 
 public Nickolas() {
@@ -280,14 +267,14 @@ private void set_Datacenters_and_brokers() {
 	for(int i=0; i<Mobiles_Info_List.size(); i++) Mobiles_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Mobile_Broker_"+i));
     for(int i=0; i<Edge_Servers_Info_List.size(); i++) {
     	Edge_Servers_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Edge_Server_Broker_"+i));
-    	Edge_Servers_Info_List.get(i).add_zone(200,-64+40);
-    	Edge_Servers_Info_List.get(i).add_zone(180,-65+40);
-    	Edge_Servers_Info_List.get(i).add_zone(160,-69+40);
-    	Edge_Servers_Info_List.get(i).add_zone(140,-73+40);
-    	Edge_Servers_Info_List.get(i).add_zone(120,-75+40);
-    	Edge_Servers_Info_List.get(i).add_zone(110,-77+40);
-    	Edge_Servers_Info_List.get(i).add_zone(105,-79+40);
-    	Edge_Servers_Info_List.get(i).add_zone(100,-81+40);
+    	Edge_Servers_Info_List.get(i).add_zone(300,-64+40);
+    	Edge_Servers_Info_List.get(i).add_zone(280,-65+40);
+    	Edge_Servers_Info_List.get(i).add_zone(260,-69+40);
+    	Edge_Servers_Info_List.get(i).add_zone(240,-73+40);
+    	Edge_Servers_Info_List.get(i).add_zone(220,-75+40);
+    	Edge_Servers_Info_List.get(i).add_zone(210,-77+40);
+    	Edge_Servers_Info_List.get(i).add_zone(205,-79+40);
+    	Edge_Servers_Info_List.get(i).add_zone(200,-81+40);
     	//Set properly the radious
     	Edge_Servers_Info_List.get(i).set_radious(radious_scale*(i+1));  	
     }
@@ -355,6 +342,7 @@ private void check(double time) {
 	
 	Temp_List_Of_Lonely_Mobiles.addAll(Temp_List_Of_Not_Fit_Mobiles_To_Edges);
 	Temp_List_Of_Not_Fit_Mobiles_To_Edges.forEach(mobile->mobile.checked());
+	no_fit_mobiles_counter+=Temp_List_Of_Not_Fit_Mobiles_To_Edges.size();
 	
 	for(int i=0; i<Temp_List_Of_Mobiles.size(); i++) {
 		if(!Temp_List_Of_Minimum_Values.isEmpty()) {
@@ -376,6 +364,7 @@ private void check(double time) {
 			for(Mobiles_Info info:Temp_List_Of_Mobiles) compute_objective_fuction_for_this_mobile(info);
 			Temp_List_Of_Lonely_Mobiles.addAll(Temp_List_Of_Not_Fit_Mobiles_To_Edges);
 			Temp_List_Of_Not_Fit_Mobiles_To_Edges.forEach(mob->mob.checked());
+			no_fit_mobiles_counter+=Temp_List_Of_Not_Fit_Mobiles_To_Edges.size();
 		}
 	}
 	if(Mobi_Het_And_Random_Compare) {
@@ -393,8 +382,18 @@ private void check(double time) {
 		standard_deviation_random=0;
 		standard_deviation_mobi_het=0;
 	}
+	else if(!Mobi_Het_And_Random_Compare && random) {
+		mobi_het_total_time_edges.add(mobi_het_total_time_edges_temp);
+		list_data_zones_services_mobi_het.add(mobi_het_associativity);
+		list_standard_deviation_mobi_het.add(standard_deviation_mobi_het);
+		Times.add(time);
+		mobi_het_total_time_edges_temp=0;
+		mobi_het_associativity=0;
+		standard_deviation_mobi_het=0;
+	}
 	check_balance_between_lonely_mobiles_and_cloud_server(Temp_List_Of_Lonely_Mobiles,time);
 	Mobiles_Info_List.forEach(mobile->mobile.clear_edge_point_and_uncheck_mobile_and_submitted_list_of_cloudlets());
+	Mobiles_Info_List.forEach(mobile->mobile.set_temp_time_data_zone_standard_deviation(0, 0, 0));
 	Mobiles_Info_List.forEach(mobile->mobile.check_mobile_for_random(true));
 	clear_the_temp_lists();
 }
@@ -434,11 +433,10 @@ private void compute_objective_fuction_for_this_mobile(Mobiles_Info info) {
 					double bytes_to_send=0.0,MI_to_exec=0.0,delay=0.0,bytes_to_send_back=0.0;
 					for(Cloudlet cloudlet:info.get_the_list_of_cloudlets_that_are_going_to_be_submitted()) { bytes_to_send+=cloudlet.getFileSize(); MI_to_exec+=cloudlet.getTotalLength(); delay+=cloudlet.getSubmissionDelay(); bytes_to_send_back+=cloudlet.getOutputSize(); }
 					double t_send=bytes_to_send/(zwnh_send);			
-					double t_exec=compute_t_exec_on_selected_vms(Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)).getBroker().getVmWaitingList(),Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)).getBroker().getVmCreatedList(),MI_to_exec);
+					double t_exec=compute_t_exec_on_selected_vms(Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)).getBroker().getVmWaitingList(),Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)).getBroker().getVmCreatedList(),MI_to_exec,info.get_the_list_of_cloudlets_that_are_going_to_be_submitted().size());
 					double t_so_far=delay+t_send+t_exec;		
 					int zwnh_receive=predict_the_zone(info,Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),t_so_far*speed_x,t_so_far*speed_y);		
-					double t_send_back=bytes_to_send_back/(zwnh_receive);
-					
+					double t_send_back=bytes_to_send_back/(zwnh_receive);				
 					if(!check_if_the_mobile_is_going_to_stay_in_the_edge(info,Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i)),(t_send_back+t_so_far)*speed_x,(t_send_back+t_so_far)*speed_y))	temp++;
 					else {
 						if(Mobi_Het_And_Random_Compare && info.check_for_random()) {
@@ -448,11 +446,16 @@ private void compute_objective_fuction_for_this_mobile(Mobiles_Info info) {
 							info.check_mobile_for_random(false);
 						}
 						s_fn=(t_send_back+t_so_far)/assosiativity+s;
-						if(s_fn<s_old) {
+						if(s_fn<s_old && (!random) ) {
 							info.set_temp_time_data_zone_standard_deviation(t_send_back+t_so_far,assosiativity,s);
 							s_old=s_fn;
 							the_best_edge=Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i));
-						}	
+						}
+						else if(random && i==temp) {
+							info.set_temp_time_data_zone_standard_deviation(t_send_back+t_so_far,assosiativity,s);
+							s_old=s_fn;
+							the_best_edge=Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i));
+						}
 					}
 			}
 				if(temp==info.get_edge_point_to_mobile().size()) Temp_List_Of_Not_Fit_Mobiles_To_Edges.add(info);
@@ -564,21 +567,36 @@ private double computation_of_standard_deviation(int edge_id,List<Cloudlet> clou
 }
 
 private void print_results() {
-	
+	String name = Results + "General/";
+    File TheInsDir = new File(name);
+    if(!TheInsDir.exists()) {
+	 		try {
+	 			TheInsDir.mkdir();
+	 		}
+	 		catch(SecurityException se){
+        //handle it
+	 		} 
+    }
 	take_finished_cloudlets_from_all_brokers(simulation.clock());
 	compare_mobi_het_with_random(Mobi_Het_And_Random_Compare);
+	compare_mobi_het_with_random(random);
 	Edge_Servers_Info_List.forEach(edge->real_total_time_edges+=edge.get_Response_Time_from_Edge());
 	Mobiles_Info_List.forEach(mobile->real_total_time_edges+=mobile.get_real_total_time());
-	
+	long total_length_of_the_cloudlets_on_edges=0;
+	for(Edge_Servers_Info edge:Edge_Servers_Info_List) total_length_of_the_cloudlets_on_edges+=edge.get_total_length_of_executed_cloudlets();
 	final Comparator<Cloudlet> sortByCloudletId = comparingDouble(c -> c.getId());
 	final Comparator<Cloudlet> sortByStartTime = comparingDouble(Cloudlet::getExecStartTime);
 	finishedCloudletsatall.sort(sortByCloudletId.thenComparing(sortByStartTime));
 	try {
-		PrintWriter writer = new PrintWriter(Results+"Cloudlets_Results.txt", "UTF-8");
+		PrintWriter writer = new PrintWriter(name+"Cloudlets_Results.txt", "UTF-8");
 		writer.printf("\t\t\t\t\t\t---------->>>>>CLOUDLETS RESULTS<<<<<<----------\n");
 		for(final Cloudlet cloudlet:finishedCloudletsatall) {
-			writer.printf("\t\tTime %6.1f: CPU Usage Time: %6.1f inside Datacenter : %d with name: %s and id: %d\n", cloudlet.getFinishTime(), cloudlet.getActualCpuTime(), cloudlet.getLastDatacenter().getId(),cloudlet.getLastDatacenter().getName(),cloudlet.getId());
+			int datacenter_id;
+			if(cloudlet.getLastDatacenter().getId()>Num_Of_Mobiles) datacenter_id=(int) cloudlet.getLastDatacenter().getId()-Num_Of_Mobiles;
+			else datacenter_id=(int) cloudlet.getLastDatacenter().getId()-1;
+			writer.printf("\t\tTime Arrival: %6.1f, Time Execution Start: %6.1f ,Time Finish %6.1f: ,CPU Usage Time: %6.1f ,Inside Datacenter : %d with name: %s and id: %d\n", cloudlet.getLastDatacenterArrivalTime(), cloudlet.getExecStartTime(), cloudlet.getFinishTime(), cloudlet.getActualCpuTime(), datacenter_id ,cloudlet.getLastDatacenter().getName(),cloudlet.getId());
 		}
+		writer.printf("\t\t----->>>Total Executed Cloudlets: %d <<<-----\n",finishedCloudletsatall.size());
 		writer.close();
 	} catch (FileNotFoundException e1) {
 		// TODO Auto-generated catch block
@@ -588,16 +606,28 @@ private void print_results() {
 		e1.printStackTrace();
 	}
 	try {
-		PrintWriter writer = new PrintWriter(Results+"Mobiles_Edges_Cloud_Results.txt", "UTF-8");
+		PrintWriter writer = new PrintWriter(name+"Mobiles_Edges_Cloud_Results.txt", "UTF-8");
 		writer.printf("\t\t\t\t\t\t---------->>>>>CLOUD_SERVER_INFO<<<<<----------\n");
 		for(Cloud_Servers_Info information:Cloud_Servers_Info_List) { 
 			writer.printf("\t\t------------------------\n");
-			writer.printf("\t\tIn: %s has executed %d Cloudlets with total response time %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.get_total_response_time());
+			writer.printf("\t\tIn: %s has executed %d Cloudlets(Total submitted cloudlets: %d,Total executed mips: %d,Total unexecuted mips: %d) with total response time(EXECUTION): %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.total_length_of_belonging_cloudlets(),information.get_total_length_of_executed_cloudlets(),information.get_total_length_of_unexecuted_cloudlets(),information.get_total_response_time());
 			writer.printf("\t\t------------------------\n");
 			if(Mobi_Het_And_Random_Compare) {
 				writer.printf("\t\t--->>> %f (real timing on edges transport,execution response time), %f (mobi het algorith measure response), %f(random mapping mobile to edge response) <<<<---- \n",real_total_time_edges,mobi_het_total_time_edges_var,random_total_time_edges_var);
-				writer.printf("\t\t--->>>  %f (mobi het algorith measure associativity), %f (random mapping mobile to edge response) <<<<---- \n", total_service_mobi_het,total_service_random);
-				writer.printf("\t\t--->>>  %f (mobi het algorith measure standard deviation), %f (random mapping mobile to edge standard deviation) <<<<---- \n", total_standard_deviation_mobi_het,total_standard_deviation_random);
+				writer.printf("\t\t--->>>  %f (mobi het algorith measure average Quality of Service), %f (random mapping mobile to edge average Quality of Service) <<<<---- \n", total_service_mobi_het,total_service_random);
+				writer.printf("\t\t--->>>  %f (mobi het algorith measure average standard deviation), %f (random mapping mobile to edge average standard deviation) <<<<---- \n", total_standard_deviation_mobi_het,total_standard_deviation_random);
+				writer.printf("\t\t--->>> %d total times have rejected from Edges the mobiles <<<<---- \n",no_fit_mobiles_counter);
+				writer.printf("\t\t--->>> %d total Mips have executed on all edges <<<<---- \n",total_length_of_the_cloudlets_on_edges);
+				writer.printf("\t\t--->>> %d total Cloudlets have created with %.0f total Mips <<<<---- \n",cloudletId+1,total_created_mips);
+				writer.printf("\t\t------------------------\n");
+			}
+			else if(random) {
+				writer.printf("\t\t--->>> %f (real timing on edges transport,execution response time),  %f (random measure response) <<<<---- \n",real_total_time_edges,mobi_het_total_time_edges_var);
+				writer.printf("\t\t--->>>  %f (random measure average Quality of Service) <<<<---- \n",total_service_mobi_het);
+				writer.printf("\t\t--->>>  %f (random measure average standard deviation) <<<<---- \n", total_standard_deviation_mobi_het);
+				writer.printf("\t\t--->>> %d total times have rejected from Edges the mobiles <<<<---- \n",no_fit_mobiles_counter);
+				writer.printf("\t\t--->>> %d total Mips have executed on all edges <<<<---- \n",total_length_of_the_cloudlets_on_edges);
+				writer.printf("\t\t--->>> %d total Cloudlets have created with %.0f total Mips <<<<---- \n",cloudletId+1,total_created_mips);
 				writer.printf("\t\t------------------------\n");
 			}
 			List<Double> ResultLista = information.get_the_percent_partiotion_of_edge_on_mobiles(Num_Of_Mobiles);
@@ -609,7 +639,7 @@ private void print_results() {
 		writer.printf("\t\t\t\t\t\t---------->>>>>EDGE_SERVER_INFO<<<<<----------\n");
 		for(Edge_Servers_Info information:Edge_Servers_Info_List) { 
 			writer.printf("\t\t------------------------\n");
-			writer.printf("\t\tIn: %s has executed %d Cloudlets with total response time %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.get_total_response_time());
+			writer.printf("\t\tIn: %s has executed %d Cloudlets(Total submitted cloudlets: %d,Total executed mips: %d,Total unexecuted mips: %d) with total response time(EXECUTION): %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.total_length_of_belonging_cloudlets(),information.get_total_length_of_executed_cloudlets(),information.get_total_length_of_unexecuted_cloudlets(),information.get_total_response_time());
 			writer.printf("\t\t------------------------\n");
 			List<Double> ResultList = information.get_the_percent_partiotion_of_edge_on_mobiles(Num_Of_Mobiles);
 			for(int i=0; i<Num_Of_Mobiles; i++) {
@@ -620,7 +650,7 @@ private void print_results() {
 		writer.printf("\t\t\t\t\t\t---------->>>>>MOBILE_INFO<<<<<----------\n");
 		for(Mobiles_Info information:Mobiles_Info_List) { 
 			writer.printf("\t\t------------------------\n");
-			writer.printf("\t\tIn: %s has executed %d Cloudlets with total response time %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.get_total_response_time());
+			writer.printf("\t\tIn: %s has executed %d Cloudlets(Total submitted cloudlets: %d,Total executed mips: %d,Total unexecuted mips: %d) with total response time(EXECUTION): %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.total_length_of_belonging_cloudlets(),information.get_total_length_of_executed_cloudlets(),information.get_total_length_of_unexecuted_cloudlets(),information.get_total_response_time());
 			writer.printf("\t\t------------------------\n");
 		}
 		writer.printf("\t\t----->>>Total Executed Cloudlets: %d <<<-----\n",finishedCloudletsatall.size());
@@ -641,9 +671,7 @@ private void print_results() {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
-	System.out.printf("\t\t----->>>Total Executed Cloudlets: %d <<<-----\n",finishedCloudletsatall.size());
-	System.out.println(getClass().getSimpleName() + " finished!");
-	System.out.printf("\t\t----->>> "+nickos);
+	System.out.println('\n' + getClass().getSimpleName() + " finished!");
 }
      
 private void energy_cpu_for_hosts(double total_mips) {
@@ -677,14 +705,14 @@ private ArrayList<Vm> createVms(int category) {
     int vms_for_edges=4;
     int vms_for_cloud=4;
     if(category==0) {
-    	mips = 750; ram=256; vms=vms_for_mobiles; 
+    	mips = 500; ram=256; vms=vms_for_mobiles; 
     }
     else if(category==1) {
     	int id_vm=(createsVms-Num_Of_Mobiles*vms_for_mobiles)/vms_for_edges;
-    	mips = 1500+id_vm*500; ram=1024; vms=vms_for_edges; 
+    	mips = (int) (1000+Math.pow(id_vm, 2)*200); ram=1024; vms=vms_for_edges; 
     }
     else {
-    	mips = 3500; ram=2048; vms=vms_for_cloud;
+    	mips = 3000; ram=2048; vms=vms_for_cloud;
     }
     //Creates a container to store VMs. This list is passed to the broker later
     ArrayList<Vm> list = new ArrayList<>(vms);
@@ -709,6 +737,7 @@ private List<Cloudlet> createCloudlets(int cloudlets,int pesNumber,Mobiles_Info 
     long fileSize = mobile.get_random_filesize();
     long outputSize = fileSize;
     UtilizationModel utilizationModel = new UtilizationModelFull();
+    total_created_mips+=length*pesNumber;
 
     double delay=mobile.get_random_delay();
     Cloudlet cloudlet = new CloudletSimple(++cloudletId,length, pesNumber);
@@ -732,16 +761,17 @@ private Datacenter createDatacenter(int category,double x,double y) {
     List<Pe> peList = new ArrayList<>();
     if(category==0) {
     	//Mobile Device
-		mips = 1500; ram = 512*2; storage = 1000000/2; bw = 10000; hosts=1; 
+		mips = 1000; ram = 512*2; storage = 1000000/2; bw = 10000; hosts=1; 
     }
     else if(category==1) {
     	//Edge Server
     	int datacenter_id=createsDatacenters-Num_Of_Mobiles;
-		mips = 1500+datacenter_id*500; ram = 1024; storage = 1000000; bw = 10000; hosts=4; 
+    	mips = (long) (1000+Math.pow(datacenter_id, 2)*200); ram = 1024; storage = 1000000; bw = 10000; hosts=4;
+
     }
     else {
     	//Cloud Server
-		mips = 3500; ram = 2048; storage = 2*1000000; bw = 10000; hosts=4; 
+		mips = 3000; ram = 2048; storage = 2*1000000; bw = 10000; hosts=4; 
     }
     if(createsDatacenters<Num_Of_Mobiles) energy_cpu_for_hosts(mips*pesNumber*hosts);  
     for(int i=0; i<pesNumber; i++) peList.add(new PeSimple(mips, new PeProvisionerSimple())); 	
@@ -803,13 +833,33 @@ private void checkMobileCpuUtilizationAndPowerConsumption() {
 				//The total Host's CPU utilization for the time specified by the map key
 				final double utilizationPercent = entry.getValue().getSum();
 				final double wattsSec = host.getPowerModel().getPower(utilizationPercent);
-				final double wattsPerInterval = wattsSec*utilizationHistoryTimeInterval;
-				total_cpu_power+=wattsPerInterval;
-				
-				CPU_ENERGY.add(wattsSec);
-				CPU_ENERGY.add(wattsSec);
-				TIME_FOR_CPU_ENERGY.add(prevTime);
-				TIME_FOR_CPU_ENERGY.add(entry.getKey());
+				double wattsPerInterval;
+				if(utilizationHistoryTimeInterval<=DATACENTER_SCHEDULING_INTERVAL) {
+					wattsPerInterval = wattsSec*utilizationHistoryTimeInterval;
+					total_cpu_power+=wattsPerInterval;
+					CPU_ENERGY.add(wattsSec);
+					CPU_ENERGY.add(wattsSec);
+					TIME_FOR_CPU_ENERGY.add(prevTime);
+					TIME_FOR_CPU_ENERGY.add(entry.getKey());	
+				} 
+				else {
+					double start_time=prevTime + DATACENTER_SCHEDULING_INTERVAL;
+					while(start_time < entry.getKey()) {
+						CPU_ENERGY.add(host.getPowerModel().getPower(0));
+						CPU_ENERGY.add(host.getPowerModel().getPower(0));
+						TIME_FOR_CPU_ENERGY.add(start_time - DATACENTER_SCHEDULING_INTERVAL);
+						TIME_FOR_CPU_ENERGY.add(start_time);
+						start_time+=DATACENTER_SCHEDULING_INTERVAL;
+						wattsPerInterval=host.getPowerModel().getPower(0)*DATACENTER_SCHEDULING_INTERVAL;
+						total_cpu_power+=wattsPerInterval;
+					}
+					
+					CPU_ENERGY.add(wattsSec);
+					CPU_ENERGY.add(wattsSec);
+					TIME_FOR_CPU_ENERGY.add(start_time - DATACENTER_SCHEDULING_INTERVAL);
+					TIME_FOR_CPU_ENERGY.add(entry.getKey());
+					total_cpu_power+=wattsSec*(entry.getKey() - start_time + DATACENTER_SCHEDULING_INTERVAL);		
+				} 				
 				prevTime = entry.getKey();
 			}
 			if(prevTime<TIME_TO_FINISH_SIMULATION) {
@@ -825,10 +875,10 @@ private void checkMobileCpuUtilizationAndPowerConsumption() {
 			for(int i=0; i<CPU_ENERGY.size(); i++) mobile.set_the_values_plot_for_cpu_energy_for_desired_host(TIME_FOR_CPU_ENERGY.get(i), CPU_ENERGY.get(i));
 			mobile.setTotalPower(total_cpu_power);
 			temp++;	
-		}
-				
+		}			
 	}
 }
+
 private void onClockTickListener(EventInfo eventInfo) {
 	
     //CPU_METER_ENERGY
@@ -872,6 +922,7 @@ private void take_finished_cloudlets_from_all_brokers(double time) {
 	
 	List<Cloudlet> executed_cloudlets_sended_to_cloud=new ArrayList<Cloudlet>();
 	executed_cloudlets_sended_to_cloud.addAll(Cloud_Servers_Info_List.get(0).get_buffer_list());
+	executed_cloudlets_sended_to_cloud.forEach(cloudlet->real_total_time_edges+=cloudlet.getOutputSize()/Cloud_Servers_Info_List.get(0).get_download_speed());
 	Mobiles_Info_List.forEach(info->info.find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(executed_cloudlets_sended_to_cloud, 2, Cloud_Servers_Info_List.get(0).get_download_speed() ,0 , time));
 	Cloud_Servers_Info_List.get(0).clear_buffer();
 
@@ -928,7 +979,6 @@ private void take_finished_cloudlets_from_all_brokers(double time) {
 		finishedCloudletsatall.add(cloudlet);
 		}
 	information.add_total_responsetime_size(averageResponseTime, size, time);
-	
 	}
 }
 
@@ -966,6 +1016,7 @@ private VerticalVmScaling createVerticalPeScaling() {
 }
 
 private void show_the_footprints() throws Exception {
+
 	ArrayList<ArrayList<Integer>> coordinates_x= new ArrayList<ArrayList<Integer>>();
 	List<ArrayList<Integer>> coordinates_y= new ArrayList<ArrayList<Integer>>();
 	List<Integer> coordinates_edge_x= new ArrayList<Integer>();
@@ -1012,6 +1063,7 @@ private void show_the_footprints() throws Exception {
 	    getSaveSnapShot(frame, Results + "Mobile_" + mobile.get_mob_id() + "/footprint_" + mobile.get_mob_id() + ".png"); 
 	    
 	}
+	String name = Results + "General/";
 	Points graph = new Points(coordinates_x,coordinates_y,coordinates_edge_x,coordinates_edge_y,radious,step,max_grid);
 	JFrame frame = new JFrame("Points_of_All_Mobiles");
 	frame.add(graph);
@@ -1039,7 +1091,7 @@ private void show_the_footprints() throws Exception {
     });
     frame.setVisible(true);
     TimeUnit.SECONDS.sleep(1);
-    getSaveSnapShot(frame, Results+"Total_Footprint.png");  
+    getSaveSnapShot(frame, name+"Total_Footprint.png");  
 	}
 
 private void check_balance_between_lonely_mobiles_and_cloud_server(List<Mobiles_Info> list_of_lonely_mobiles,double time) {
@@ -1053,9 +1105,9 @@ private void check_balance_between_lonely_mobiles_and_cloud_server(List<Mobiles_
 				total_file_size_input+=cloudlet.getFileSize();
 				total_file_size_ouput+=cloudlet.getOutputSize();
 			}
-			double t_mob=compute_t_exec_on_selected_vms(mobile.getBroker().getVmWaitingList(),mobile.getBroker().getVmCreatedList(),total_mips_to_submit);
+			double t_mob=compute_t_exec_on_selected_vms(mobile.getBroker().getVmWaitingList(),mobile.getBroker().getVmCreatedList(),total_mips_to_submit,mobile.get_the_list_of_cloudlets_that_are_going_to_be_submitted().size());
 			double t_send_to_cloud_server=total_file_size_input/Cloud_Servers_Info_List.get(0).get_upload_speed();
-			double t_exe_to_cloud_server=compute_t_exec_on_selected_vms(Cloud_Servers_Info_List.get(0).getBroker().getVmWaitingList(),Cloud_Servers_Info_List.get(0).getBroker().getVmCreatedList(),total_mips_to_submit);
+			double t_exe_to_cloud_server=compute_t_exec_on_selected_vms(Cloud_Servers_Info_List.get(0).getBroker().getVmWaitingList(),Cloud_Servers_Info_List.get(0).getBroker().getVmCreatedList(),total_mips_to_submit,mobile.get_the_list_of_cloudlets_that_are_going_to_be_submitted().size());
 			double t_get_the_response_from_cloud_server=total_file_size_ouput/Cloud_Servers_Info_List.get(0).get_download_speed();
 			double t_send_ex_get_cloud_server=t_send_to_cloud_server+t_exe_to_cloud_server+t_get_the_response_from_cloud_server;
 			if(t_send_ex_get_cloud_server<=t_mob)  {
@@ -1068,6 +1120,7 @@ private void check_balance_between_lonely_mobiles_and_cloud_server(List<Mobiles_
 		} 
 	} 
 }
+
 public BufferedImage getScreenShot(Component component) {
 
     BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -1075,67 +1128,96 @@ public BufferedImage getScreenShot(Component component) {
     component.paint(image.getGraphics());
     return image;
 }
-  public void getSaveSnapShot(Component component, String fileName) throws Exception {
+
+public void getSaveSnapShot(Component component, String fileName) throws Exception {
         BufferedImage img = getScreenShot(component);
         // write the captured image as a PNG
         ImageIO.write(img, "png", new File(fileName));
     }
-  private void compare_mobi_het_with_random(boolean check) {
+
+private void compare_mobi_het_with_random(boolean check) {
 	  if(check) {
 		  //Response Graph
 		  List<Plotter> windowPlots = new ArrayList<>();
 		  String[] s = new String[3];
 		  XYSeries Mobi_Het = new XYSeries("Mobi-Het-Response");
-		  XYSeries Random = new XYSeries("Random-Response");
 		  for(int i=0; i<mobi_het_total_time_edges.size(); i++) {
 			  mobi_het_total_time_edges_var+=mobi_het_total_time_edges.get(i);
 			  Mobi_Het.add(Times.get(i), mobi_het_total_time_edges.get(i));
 		  }
-		  for(int i=0; i<random_total_time_edges.size(); i++) {
-			  random_total_time_edges_var+=random_total_time_edges.get(i);
-			  Random.add(Times.get(i), random_total_time_edges.get(i));
+		  if(Mobi_Het_And_Random_Compare) {
+			 XYSeries Random = new XYSeries("Random-Response");
+			 for(int i=0; i<random_total_time_edges.size(); i++) {
+				 random_total_time_edges_var+=random_total_time_edges.get(i);
+				 Random.add(Times.get(i), random_total_time_edges.get(i));
+			 }
+			 XYSeriesCollection dataset_1 = new XYSeriesCollection();
+			 dataset_1.addSeries(Mobi_Het);
+			 dataset_1.addSeries(Random);
+			 Plotter Compare_Response = new Plotter(String.format("Compare Mobi-Het with total Response Time: %.4f and Random with total Response Time: %.4f", mobi_het_total_time_edges_var,random_total_time_edges_var),dataset_1,"Response_Time");	 
+			 s[0]="Compare_Response_Graph.png";
+			 windowPlots.add(Compare_Response);
 		  }
-		  XYSeriesCollection dataset_1 = new XYSeriesCollection();
-		  dataset_1.addSeries(Mobi_Het);
-		  dataset_1.addSeries(Random);
-		  Plotter Compare_Response = new Plotter(String.format("Compare Mobi-Het with total Response Time: %.4f and Random with total Response Time: %.4f", mobi_het_total_time_edges_var,random_total_time_edges_var),dataset_1,"Response_Time");
-		  s[0]="Compare_Response_Graph.png";
-		  windowPlots.add(Compare_Response);		  
+		  else {
+			  Plotter Random_Response =  new Plotter(String.format("Random experiment with total Response Time: %.4f", mobi_het_total_time_edges_var),Mobi_Het,Color.BLUE);
+			  s[0]="Random_Response_Graph.png";
+			  windowPlots.add(Random_Response);
+		  }
 		  //Service Graph
 		  XYSeries Mobi_Het_Service = new XYSeries("Mobi-Het-Service");
-		  XYSeries Random_Service = new XYSeries("Random_Service");
+		  
 		  for(int i=0; i<list_data_zones_services_mobi_het.size(); i++) {
 			  total_service_mobi_het+=list_data_zones_services_mobi_het.get(i);
 			  Mobi_Het_Service.add(Times.get(i), list_data_zones_services_mobi_het.get(i));
 		  }
-		  for(int i=0; i<list_data_zones_services_random.size(); i++) {
-			  total_service_random+=list_data_zones_services_random.get(i);
-			  Random_Service.add(Times.get(i), list_data_zones_services_random.get(i));
+		  total_service_mobi_het=total_service_mobi_het/list_data_zones_services_mobi_het.size();
+		  if(Mobi_Het_And_Random_Compare) {
+			  XYSeries Random_Service = new XYSeries("Random_Service");
+			  for(int i=0; i<list_data_zones_services_random.size(); i++) {
+				  total_service_random+=list_data_zones_services_random.get(i);
+				  Random_Service.add(Times.get(i), list_data_zones_services_random.get(i));
+			  }
+			  total_service_random=total_service_random/list_data_zones_services_random.size();
+			  XYSeriesCollection dataset_2 = new XYSeriesCollection();
+			  dataset_2.addSeries(Mobi_Het_Service);
+			  dataset_2.addSeries(Random_Service);
+			  Plotter Compare_Service = new Plotter(String.format("Compare Mobi-Het with total Average Quality of Service: %.4f and Random with total Average Quality of Service: %.4f", total_service_mobi_het,total_service_random),dataset_2,"Sevice");
+			  s[1]="Compare_Service_Graph.png";
+			  windowPlots.add(Compare_Service);	
 		  }
-		  XYSeriesCollection dataset_2 = new XYSeriesCollection();
-		  dataset_2.addSeries(Mobi_Het_Service);
-		  dataset_2.addSeries(Random_Service);
-		  Plotter Compare_Service = new Plotter(String.format("Compare Mobi-Het with total Service: %.4f and Random with total Service: %.4f", total_service_mobi_het,total_service_random),dataset_2,"Sevice");
-		  s[1]="Compare_Service_Graph.png";
-		  windowPlots.add(Compare_Service);	  
-		  //Standard_Deviation Graph
+		  else {
+			  Plotter Random_Service = new Plotter(String.format("Random experiment with total Average Quality of Service: %.4f", total_service_mobi_het),Mobi_Het_Service,Color.BLUE);
+			  s[1]="Random_Service_Graph.png";
+			  windowPlots.add(Random_Service);	
+		  }
+		  //Standard_Deviation Graph	 
 		  XYSeries Mobi_Het_Standard_Deviation = new XYSeries("Mobi-Het-Standard-Deviation");
-		  XYSeries Random_Standard_Deviation = new XYSeries("Random_Standard_Deviation");
 		  for(int i=0; i<list_standard_deviation_mobi_het.size(); i++) {
 			  total_standard_deviation_mobi_het+=list_standard_deviation_mobi_het.get(i);
 			  Mobi_Het_Standard_Deviation.add(Times.get(i), list_standard_deviation_mobi_het.get(i));
 		  }
-		  for(int i=0; i<list_standard_deviation_random.size(); i++) {
-			  total_standard_deviation_random+=list_standard_deviation_random.get(i);
-			  Random_Standard_Deviation.add(Times.get(i), list_standard_deviation_random.get(i));
+		  total_standard_deviation_mobi_het=total_standard_deviation_mobi_het/list_standard_deviation_mobi_het.size();
+		  if(Mobi_Het_And_Random_Compare) {
+			  XYSeries Random_Standard_Deviation = new XYSeries("Random_Standard_Deviation");
+			  for(int i=0; i<list_standard_deviation_random.size(); i++) {
+				  total_standard_deviation_random+=list_standard_deviation_random.get(i);
+				  Random_Standard_Deviation.add(Times.get(i), list_standard_deviation_random.get(i));
+			  }
+			  total_standard_deviation_random=total_standard_deviation_random/list_standard_deviation_random.size();
+			  XYSeriesCollection dataset_3 = new XYSeriesCollection();
+			  dataset_3.addSeries(Mobi_Het_Standard_Deviation);
+			  dataset_3.addSeries(Random_Standard_Deviation);
+			  Plotter Compare_Standard_Deviation = new Plotter(String.format("Compare Mobi-Het with total Average Standard_Deviation: %.4f and Random with total Average Standard_Deviation: %.4f", total_standard_deviation_mobi_het,total_standard_deviation_random),dataset_3,"Standard_Deviation");
+			  s[2]="Compare_Standard_Deviation_Graph.png";
+			  windowPlots.add(Compare_Standard_Deviation);
 		  }
-		  XYSeriesCollection dataset_3 = new XYSeriesCollection();
-		  dataset_3.addSeries(Mobi_Het_Standard_Deviation);
-		  dataset_3.addSeries(Random_Standard_Deviation);
-		  Plotter Compare_Standard_Deviation = new Plotter(String.format("Compare Mobi-Het with total Standard_Deviation: %.4f and Random with total Standard_Deviation: %.4f", total_standard_deviation_mobi_het,total_standard_deviation_random),dataset_3,"Standard_Deviation");
-		  s[2]="Compare_Standard_Deviation_Graph.png";
-		  windowPlots.add(Compare_Standard_Deviation); 
-		 //Plot 
+		  else {
+			  Plotter Random_Standard_Deviation = new Plotter(String.format("Random experiment with total Average Standard_Deviation: %.4f", total_standard_deviation_mobi_het),Mobi_Het_Standard_Deviation,Color.BLUE);
+			  s[2]="Random_Standard_Deviation_Graph.png";
+			  windowPlots.add(Random_Standard_Deviation);
+		  }
+		 //Plot
+		  String name = Results + "General/";
 		  int i=0;
 	        for (Plotter win : windowPlots) {
 	            win.pack(); 
@@ -1144,7 +1226,7 @@ public BufferedImage getScreenShot(Component component) {
 	            RefineryUtilities.positionFrameOnScreen(win, i*0.1, i*0.1); 
 	            try {
 	            	TimeUnit.SECONDS.sleep(1);
-					getSaveSnapShot(win,  Results + s[i]);
+					getSaveSnapShot(win,  name + s[i]);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -1154,26 +1236,28 @@ public BufferedImage getScreenShot(Component component) {
 	  	}
   }
 
-  public double compute_t_exec_on_selected_vms(List<Vm> Vm_waiting_list,List<Vm> Vm_Created_list,double mips_to_add) {
+public double compute_t_exec_on_selected_vms(List<Vm> Vm_waiting_list,List<Vm> Vm_Created_list,double mips_to_add,int number_of_cloudlets) {
 	  double t_exec;
-		if(Vm_Created_list.isEmpty()) 	t_exec=mips_to_add/Vm_waiting_list.get(0).getTotalMipsCapacity();
+		if(Vm_Created_list.isEmpty()) 	{
+			t_exec=mips_to_add/Vm_waiting_list.get(0).getTotalMipsCapacity();
+		}
 		else {
-			double total_time_of_the_queue_of_the_vm=0,total_min_time_of_the_queue_of_the_vm=Double.MAX_VALUE;
+			double total_mips_of_the_queue_of_the_vm=0;
 			double capacity_of_the_perfect_vm=Vm_Created_list.get(0).getTotalMipsCapacity();
-			for(Vm vm:Vm_Created_list) {
-			
+			int size=0;
+			for(Vm vm:Vm_Created_list) {		
 				for(CloudletExecution cloudlet:vm.getCloudletScheduler().getCloudletWaitingList()) {
-					total_time_of_the_queue_of_the_vm+=(cloudlet.getNumberOfPes()*cloudlet.getCloudletLength())/vm.getTotalMipsCapacity();
+					total_mips_of_the_queue_of_the_vm+=(cloudlet.getNumberOfPes()*cloudlet.getCloudletLength());
+					size++;
 				}
 				for(CloudletExecution cloudlet:vm.getCloudletScheduler().getCloudletExecList()) {
-					total_time_of_the_queue_of_the_vm+=(cloudlet.getNumberOfPes()*cloudlet.getRemainingCloudletLength())/vm.getTotalMipsCapacity();		
-				}
-				if(total_time_of_the_queue_of_the_vm<=total_min_time_of_the_queue_of_the_vm) {
-					total_min_time_of_the_queue_of_the_vm=total_time_of_the_queue_of_the_vm;
-					capacity_of_the_perfect_vm=vm.getTotalMipsCapacity();
-				}		
+					total_mips_of_the_queue_of_the_vm+=(cloudlet.getNumberOfPes()*cloudlet.getRemainingCloudletLength());
+					size++;
+				}				
 			}
-			t_exec=total_min_time_of_the_queue_of_the_vm+mips_to_add/capacity_of_the_perfect_vm;
+			for(int i=0; i<number_of_cloudlets; i++) size++;
+			if(size>Vm_Created_list.size()) t_exec=(total_mips_of_the_queue_of_the_vm+mips_to_add)/(capacity_of_the_perfect_vm*Vm_Created_list.size());
+			else t_exec=(total_mips_of_the_queue_of_the_vm+mips_to_add)/(capacity_of_the_perfect_vm*size);
 		}
 		return t_exec;
   }
