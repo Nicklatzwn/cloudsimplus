@@ -40,9 +40,10 @@ public class Points extends JPanel {
 	    }
 	    g2d.setColor(Color.RED);
 	    for(int i=0; i<coordinates_edge_x.size(); i++) {
-	    	int x = coordinates_edge_x.get(i)-(radious.get(i)/2)+step;
-	    	int y = coordinates_edge_y.get(i)-(radious.get(i)/2)+step;
-	    	g2d.drawOval(x, y, radious.get(i), radious.get(i));
+	    	int x = coordinates_edge_x.get(i)-radious.get(i)+step;
+	    	int y = coordinates_edge_y.get(i)-radious.get(i)+step;
+	    	int diameter = 2*radious.get(i);
+	    	g2d.drawOval(x, y, diameter, diameter);
 	    }
 	    g2d.setColor(Color.black);
 	    g2d.drawLine((int) step/2, (int) step/2,(int) step/2 + Time_To_Finish_Record + step , (int) step/2);
