@@ -3,6 +3,8 @@ package nick;
 import org.cloudbus.cloudsim.datacenters.Datacenter;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
+import org.cloudbus.cloudsim.cloudlets.Cloudlet;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -17,7 +19,8 @@ public abstract class Device_Info {
 	private List<Double> ΑverageResponseTime_size;
 	private List<Double> Times;
 	private List<Host> HostList;
-	public final int Interval=10;
+	protected final int Interval=10;
+	protected List<Cloudlet> Cloudlets;
 	
 	public Device_Info(Datacenter datacenter) {
 		this.datacenter=datacenter;
@@ -28,6 +31,7 @@ public abstract class Device_Info {
 		Times = new ArrayList<Double>();
 		ΑverageResponseTime_size.add(0.0);
 		Times.add(0.0);
+		Cloudlets=new ArrayList<Cloudlet>();
 	}
 	
 	public Datacenter getDatacenter() {
@@ -82,5 +86,23 @@ public abstract class Device_Info {
 	}
 	public double get_total_response_time() {
 		return TotalResponseTimeOfSim;
+	}
+	
+	public long get_total_length_of_executed_cloudlets() {
+		long total_length=0;
+		for(Cloudlet cloudlet:Cloudlets) {	
+			if(cloudlet.isFinished()) total_length+=cloudlet.getTotalLength();
+		}
+		return total_length;
+	}
+	 public long get_total_length_of_unexecuted_cloudlets() {
+			long total_length=0;
+			for(Cloudlet cloudlet:Cloudlets) {	
+				if(!cloudlet.isFinished()) total_length+=cloudlet.getTotalLength();
+			}
+			return total_length;
+	}
+	public int total_length_of_belonging_cloudlets() {
+		return Cloudlets.size();
 	}
 }
