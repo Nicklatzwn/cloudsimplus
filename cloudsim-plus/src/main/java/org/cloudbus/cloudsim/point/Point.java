@@ -40,21 +40,25 @@ public class Point {
 	public double getxPoint() {
 		return x;
 	}
+	
 	public double getyPoint() {
 		return y;
 	}
+	
 	public void setxPoint(double x) {
 		this.x=x;
 		long longValue_x = Math.round(x);
 		int intValue_x = (int) longValue_x;
 		coordinates_x.add(intValue_x);
 	}
+	
 	public void setyPoint(double y) {
 		this.y=y;
 		long longValue_y = Math.round(y);
 		int intValue_y = (int) longValue_y;
 		coordinates_y.add(intValue_y);
 	}
+	
 	public void move(double dt) {
 		
 		double x_new=x + speed_x*dt;
@@ -86,18 +90,23 @@ public class Point {
 		this.speed_x=speed_x;
 		this.speed_y=speed_y;
 	}
+	
 	public void set_limit(double limit) {
 		this.limit=limit;
 	}
+	
 	public double get_speed_x() {
 		return speed_x;
 	}
+	
 	public double get_speed_y() {
 		return speed_y;
 	}
+	
 	public List<Integer> get_coordinates_List_x() {
 		return coordinates_x;
 	}
+	
 	public List<Integer> get_coordinates_List_y() {
 		return coordinates_y;
 	}
