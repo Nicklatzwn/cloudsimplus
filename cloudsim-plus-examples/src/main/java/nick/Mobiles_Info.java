@@ -32,19 +32,17 @@ public class Mobiles_Info extends Device_Info{
 	private final double rangeMax=10;
 	private double energy_for_Wifi_module;
 	private double energy_for_3g_module;
+	private double delay;
 	private int mob_id;
 	private boolean checked;
-	private String path;
 	private int low_input=200;
-	private int high_input=300;
-	//private final int Interval=10;
+	private int high_input=400;
 	private double energy_wifi_temp=0;
 	private double prev_time_wifi=0;
 	private double prev_time_3g=0;
 	private double energy_3g_temp=0;
 	private double temp_time=0;
 	private double associativity=0;
-	private double real_total_time=0;
 	private double standard_deviation=0;
 	private boolean check_for_random=true;
 	
@@ -99,6 +97,10 @@ public class Mobiles_Info extends Device_Info{
 			list_of_belonging_cloudlets.add(cloudlet);
 			list_of_cloudlets_that_are_going_to_be_submitted.add(cloudlet);
 		}
+	}
+	
+	public List<Cloudlet> get_the_list_of_belonging_cloudlets() {
+		return list_of_belonging_cloudlets;
 	}
 	
 	public void find_requested_cloudlet_reduce_battery_and_add_wifi_or_3g_energy(List<Cloudlet> cloudlets,int device_id,int data_rate_zone,int RSSI,double time) {
@@ -179,6 +181,7 @@ public class Mobiles_Info extends Device_Info{
 	}
 	
 	public void execute_your_own_tasks() {
+		list_of_cloudlets_that_are_going_to_be_submitted.forEach(Cloudlet->Cloudlet.setSubmissionDelay(0));
 		super.getBroker().submitCloudletList(list_of_cloudlets_that_are_going_to_be_submitted);
 		Cloudlets.addAll(list_of_cloudlets_that_are_going_to_be_submitted);
 	}
@@ -191,7 +194,7 @@ public class Mobiles_Info extends Device_Info{
 		long length=0;
 		for(Cloudlet cloudlet:list_of_cloudlets_that_are_going_to_be_submitted) length+=cloudlet.getFileSize();
 		double T_trans=length/data_rate_of_the_zone;
-		real_total_time+=T_trans;
+		Nickolas.Response_Var+=T_trans;
 		double energy=calculate_the_wifi_energy(T_trans,RSSI);
 		energy_for_Wifi_module+=energy;
 		add_to_the_wifi_plot(time,energy);	
@@ -206,7 +209,7 @@ public class Mobiles_Info extends Device_Info{
 	
 	public void add_wifi_power_to_receive_finished_cloudlets(int data_rate_of_the_zone,long total_length,int RSSI,double time) {
 		double T_trans=total_length/data_rate_of_the_zone;
-		real_total_time+=T_trans;
+		Nickolas.Response_Var+=T_trans;
 		double energy=calculate_the_wifi_energy(T_trans,RSSI);
 		energy_for_Wifi_module+=energy;
 		add_to_the_wifi_plot(time,energy);
@@ -219,14 +222,14 @@ public class Mobiles_Info extends Device_Info{
 	}
 	
 	public void add_3g_power(double time,double T_trans) {
-		double power_idle=(0.2+0.2*(new Random()).nextDouble())*T_trans;
-		double power_max=(2.5+0.7*(new Random()).nextDouble())*T_trans;
+		double power_idle=(0.3+0.3*(new Random()).nextDouble())*T_trans;
+		double power_max=(3.5+0.7*(new Random()).nextDouble())*T_trans;
 		add_to_the_3g_energy_plot(time,power_max+power_idle);
 		energy_for_3g_module+=(power_max+power_idle);
 	}
 	
 	public void add_idle_3g_power(double time,double dt) {
-		double power_idle=(0.2+0.2*(new Random()).nextDouble())*dt;
+		double power_idle=(0.3+0.3*(new Random()).nextDouble())*dt;
 		add_to_the_3g_energy_plot(time,power_idle);
 		energy_for_3g_module+=power_idle;
 	}
@@ -348,34 +351,13 @@ public class Mobiles_Info extends Device_Info{
 		return ThreadLocalRandom.current().nextInt(low_input,high_input);
 	}
 	
-	public double get_random_delay() {
-		Random r = new Random();
-		double val=r.nextDouble()*1000;
-		int temp_val= (int) val;
-		return  temp_val/1000;
+	public void set_delay(double delay) {
+		this.delay=delay;
 	}
 	
-	public BufferedImage getScreenShot(Component component) {
-
-	    BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_INT_RGB);
-	    // paints into image's Graphics
-	    component.paint(image.getGraphics());
-	    return image;
+	public double get_delay( ) {
+		return delay;
 	}
-	
-	public void getSaveSnapShot(Component component, String fileName) throws Exception {
-	        BufferedImage img = getScreenShot(component);
-	        // write the captured image as a PNG
-	        ImageIO.write(img, "png", new File(fileName));
-	  }
-	
-	 public void set_the_path(String s) {
-		 path=s;
-	 }
-	 
-	 public String get_the_path() {
-		 return path;
-	 }
 	 
 	 public void set_temp_time_data_zone_standard_deviation(double time,double associat,double standard_dev) {
 		 temp_time=time;
@@ -399,10 +381,6 @@ public class Mobiles_Info extends Device_Info{
 		 double temp=temp_time;
 		 temp_time=0;
 		 return temp;
-	 }
-	 
-	 public double get_real_total_time() {
-		 return real_total_time;
 	 }
 	 
 	 public boolean check_for_random() {
