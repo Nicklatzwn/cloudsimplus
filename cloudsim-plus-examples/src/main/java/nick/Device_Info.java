@@ -6,6 +6,12 @@ import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 
 import java.util.List;
+
+import javax.imageio.ImageIO;
+
+import java.awt.Component;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 
 public abstract class Device_Info {
@@ -21,6 +27,7 @@ public abstract class Device_Info {
 	private List<Host> HostList;
 	protected final int Interval=10;
 	protected List<Cloudlet> Cloudlets;
+	protected String path;
 	
 	public Device_Info(Datacenter datacenter) {
 		this.datacenter=datacenter;
@@ -87,7 +94,15 @@ public abstract class Device_Info {
 	public double get_total_response_time() {
 		return TotalResponseTimeOfSim;
 	}
-	
+	public long get_the_files_size_of_transport() {
+		long transport=0;
+		for(Cloudlet cloudlet:Cloudlets) {
+			if(cloudlet.isFinished())	{ 
+				transport+=cloudlet.getFileSize()+cloudlet.getOutputSize();
+			}
+		}
+		return transport;
+	}
 	public long get_total_length_of_executed_cloudlets() {
 		long total_length=0;
 		for(Cloudlet cloudlet:Cloudlets) {	
@@ -105,4 +120,24 @@ public abstract class Device_Info {
 	public int total_length_of_belonging_cloudlets() {
 		return Cloudlets.size();
 	}
+	public BufferedImage getScreenShot(Component component) {
+
+		    BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_INT_RGB);
+		    // paints into image's Graphics
+		    component.paint(image.getGraphics());
+		    return image;
+	}
+		
+	public void getSaveSnapShot(Component component, String fileName) throws Exception {
+		        BufferedImage img = getScreenShot(component);
+		        // write the captured image as a PNG
+		        ImageIO.write(img, "png", new File(fileName));
+	 }
+	 public void set_the_path(String s) {
+		 path=s;
+	 }
+	 
+	 public String get_the_path() {
+		 return path;
+	 }
 }
