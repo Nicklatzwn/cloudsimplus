@@ -52,6 +52,7 @@ public class Plotter extends ApplicationFrame {
     	  plot = (XYPlot)chart.getPlot();
           plot.getRenderer().setSeriesPaint(0, Color.BLACK);
           plot.getRenderer().setSeriesPaint(1, Color.RED);
+          plot.getRenderer().setSeriesPaint(2, Color.BLUE);
           final ChartPanel chartPanel = new ChartPanel(chart);
           chartPanel.setPreferredSize(new Dimension(500, 270));
           setContentPane(chartPanel);
