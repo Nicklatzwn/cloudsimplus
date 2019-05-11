@@ -908,7 +908,6 @@ private void onClockTickListener(EventInfo eventInfo) {
 			}
 			prev_time=Math.floor(eventInfo.getTime());
 			take_finished_cloudlets_from_all_brokers(eventInfo.getTime());
-			add_to_Response_Lists(eventInfo.getTime());
 			counter_tick=1;
 		}
 	}
@@ -918,7 +917,8 @@ private void onClockTickListener(EventInfo eventInfo) {
 private void printCloudletsFinishedSoFarAndResumeSimulation(EventInfo pauseInfo) {
     System.out.printf("\n# Simulation paused at %.2f second\n", pauseInfo.getTime());
     create_new_cloudlets_and_possible_direction_of_the_mobiles(pauseInfo.getTime());
-    this.simulation.resume();
+    add_to_Response_Lists(pauseInfo.getTime());
+    this.sadd_to_Response_Listsimulation.resume();
 }
 
 private void pauseSimulationAtSpecificTime(SimEvent simEvent) {
