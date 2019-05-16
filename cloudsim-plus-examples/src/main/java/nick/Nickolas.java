@@ -77,7 +77,7 @@ public class Nickolas {
     private final int grid_value=850;
     private final int start_battery=3000;
     private final double threshold_battery=0.01;
-    private final int radious_scale=100;
+    private final int radious_scale=60;
     private final int CHECK_TIMER = 5; // Interval time 
     private final int CPI=5;
     
@@ -275,14 +275,14 @@ private void set_Datacenters_and_brokers() {
 	for(int i=0; i<Mobiles_Info_List.size(); i++) Mobiles_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Mobile_Broker_"+i));
     for(int i=0; i<Edge_Servers_Info_List.size(); i++) {
     	Edge_Servers_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Edge_Server_Broker_"+i));
-    	Edge_Servers_Info_List.get(i).add_zone(500,-64+40);
-    	Edge_Servers_Info_List.get(i).add_zone(400,-65+40);
-    	Edge_Servers_Info_List.get(i).add_zone(350,-69+40);
-    	Edge_Servers_Info_List.get(i).add_zone(300,-73+40);
-    	Edge_Servers_Info_List.get(i).add_zone(250,-75+40);
-    	Edge_Servers_Info_List.get(i).add_zone(200,-77+40);
-    	Edge_Servers_Info_List.get(i).add_zone(170,-79+40);
-    	Edge_Servers_Info_List.get(i).add_zone(150,-81+40);
+    	Edge_Servers_Info_List.get(i).add_zone(550,-64+40);
+    	Edge_Servers_Info_List.get(i).add_zone(500,-65+40);
+    	Edge_Servers_Info_List.get(i).add_zone(450,-69+40);
+    	Edge_Servers_Info_List.get(i).add_zone(400,-73+40);
+    	Edge_Servers_Info_List.get(i).add_zone(350,-75+40);
+    	Edge_Servers_Info_List.get(i).add_zone(300,-77+40);
+    	Edge_Servers_Info_List.get(i).add_zone(250,-79+40);
+    	Edge_Servers_Info_List.get(i).add_zone(200,-81+40);
     	//Set properly the radious
     	Edge_Servers_Info_List.get(i).set_radious(radious_scale*(i+1)); 
     	Edge_Servers_Info_List.get(i).set_the_path(Results);
@@ -607,7 +607,7 @@ private void print_results() {
 			int datacenter_id;
 			if(cloudlet.getLastDatacenter().getId()>Num_Of_Mobiles) datacenter_id=(int) cloudlet.getLastDatacenter().getId()-Num_Of_Mobiles;
 			else datacenter_id=(int) cloudlet.getLastDatacenter().getId()-1;
-			writer.printf("\t\tReal Time Arrival/Exec-Start: %6.3f,Real Time Finish %6.3f: ,CPU Usage Time: %6.3f ,Perfect CPU Usage Time: %6.3f, Inside Datacenter : %d with name: %s and id: %d\n", cloudlet.getLastDatacenterArrivalTime(), cloudlet.getFinishTime(), cloudlet.getActualCpuTime(), cloudlet.getTotalLength()/vm_total_list.get((int) cloudlet.getLastDatacenter().getId()-1).get(0).getTotalMipsCapacity(), datacenter_id ,cloudlet.getLastDatacenter().getName(),cloudlet.getId());
+			writer.printf("\t\tReal Time Arrival/Exec-Start: %6.3f | ,Real Time Finish: %6.3f | ,CPU Usage Time: %6.3f ,Perfect CPU Usage Time: %6.3f | ,Inside Datacenter : %d with name: %s and id: %d\n", cloudlet.getLastDatacenterArrivalTime(), cloudlet.getFinishTime(), cloudlet.getActualCpuTime(), cloudlet.getTotalLength()/vm_total_list.get((int) cloudlet.getLastDatacenter().getId()-1).get(0).getTotalMipsCapacity(), datacenter_id ,cloudlet.getLastDatacenter().getName(),cloudlet.getId());
 		}
 		writer.printf("\t\t----->>>Total Executed Cloudlets: %d <<<-----\n",finishedCloudletsatall.size());
 		writer.close();
@@ -668,7 +668,7 @@ private void print_results() {
 			writer.printf("\t\tIn: %s has executed %d Cloudlets(Total submitted cloudlets: %d,Total executed mips: %d,Total unexecuted mips: %d) with total response time(EXECUTION): %f\n",information.getDatacenter().getName(),information.number_of_cloudlets(),information.total_length_of_belonging_cloudlets(),information.get_total_length_of_executed_cloudlets(),information.get_total_length_of_unexecuted_cloudlets(),information.get_total_response_time());
 			writer.printf("\t\t------------------------\n");
 		}
-		writer.printf("\t\t----->>>Total Executed Cloudlets: %d <<<-----\n",finishedCloudletsatall.size());
+		writer.printf("\t\t----->>>Total Executed Cloudlets: %d And Total Time of Simulation: %.2f <<<-----\n",finishedCloudletsatall.size(),simulation.clock());
 		writer.printf(getClass().getSimpleName() + " finished!");
 		writer.close();
 		
@@ -722,14 +722,14 @@ private ArrayList<Vm> createVms(int category) {
     int vms_for_edges=4;
     int vms_for_cloud=4;
     if(category==0) {
-    	mips = 500; ram=256; vms=vms_for_mobiles; 
+    	mips = 400; ram=256; vms=vms_for_mobiles; 
     }
     else if(category==1) {
     	int id_vm=(createsVms-Num_Of_Mobiles*vms_for_mobiles)/vms_for_edges;
-    	mips = (int) (1000+Math.pow(id_vm, 2)*200); ram=1024; vms=vms_for_edges; 
+    	mips = (int) (1000+Math.pow(id_vm, 2)*100); ram=1024; vms=vms_for_edges; 
     }
     else {
-    	mips = 3000; ram=2048; vms=vms_for_cloud;
+    	mips = 2000; ram=2048; vms=vms_for_cloud;
     }
     //Creates a container to store VMs. This list is passed to the broker later
     ArrayList<Vm> list = new ArrayList<>(vms);
@@ -776,17 +776,17 @@ private Datacenter createDatacenter(int category,double x,double y) {
     List<Pe> peList = new ArrayList<>();
     if(category==0) {
     	//Mobile Device
-		mips = 1000; ram = 1024; storage = 1000000/2; bw = 10000; hosts=1; 
+		mips = 800; ram = 1024; storage = 1000000/2; bw = 10000; hosts=1; 
     }
     else if(category==1) {
     	//Edge Server
     	int datacenter_id=createsDatacenters-Num_Of_Mobiles;
-    	mips = (long) (1000+Math.pow(datacenter_id, 2)*200); ram = 2048; storage = 1000000; bw = 10000; hosts=4;
+    	mips = (long) (1000+Math.pow(datacenter_id, 2)*100); ram = 2048; storage = 1000000; bw = 10000; hosts=4;
 
     }
     else {
     	//Cloud Server
-		mips = 3000; ram = 4096; storage = 2*1000000; bw = 10000; hosts=4; 
+		mips = 2000; ram = 4096; storage = 2*1000000; bw = 10000; hosts=4; 
     }
     if(createsDatacenters<Num_Of_Mobiles) energy_cpu_for_hosts(mips*pesNumber*hosts);  
     for(int i=0; i<pesNumber; i++) peList.add(new PeSimple(mips, new PeProvisionerSimple())); 	
@@ -918,7 +918,7 @@ private void printCloudletsFinishedSoFarAndResumeSimulation(EventInfo pauseInfo)
     System.out.printf("\n# Simulation paused at %.2f second\n", pauseInfo.getTime());
     create_new_cloudlets_and_possible_direction_of_the_mobiles(pauseInfo.getTime());
     add_to_Response_Lists(pauseInfo.getTime());
-    this.sadd_to_Response_Listsimulation.resume();
+    this.simulation.resume();
 }
 
 private void pauseSimulationAtSpecificTime(SimEvent simEvent) {
