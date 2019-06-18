@@ -67,7 +67,7 @@ public class Nickolas {
     private final int VM_PES_NUMBER = 2;
     private final int HOST_PES = VM_PES_NUMBER;
     private final double DATACENTER_SCHEDULING_INTERVAL = 1; 
-    private final int Num_Of_Mobiles=20;
+    private final int Num_Of_Mobiles=30;
     private final CloudSim simulation;
     private final List<Cloudlet> finishedCloudletsatall;
     private final int time_to_change_direction=2;
@@ -77,9 +77,10 @@ public class Nickolas {
     private final int grid_value=850;
     private final int start_battery=3000;
     private final double threshold_battery=0.01;
-    private final int radious_scale=60;
+    private final int radious_scale=140;
     private final int CHECK_TIMER = 5; // Interval time 
     private final int CPI=5;
+    private final int ratio=radious_scale/2;
     
     private int no_fit_mobiles_counter=0;
     private int cloudletId = -1;
@@ -88,6 +89,7 @@ public class Nickolas {
     private int max_grid;
     private double prev_time=0;
     private double total_created_mips=0;
+    private double total_energy=0;
     
     private List<Double> lista;
     private List<ArrayList<Vm>> vm_total_list;
@@ -97,6 +99,7 @@ public class Nickolas {
     private List<Mobiles_Info> Mobiles_Info_List;
     private List<Edge_Servers_Info> Edge_Servers_Info_List;
     private List<Cloud_Servers_Info> Cloud_Servers_Info_List;
+  
     //---------
     
     private int counter=0;
@@ -257,16 +260,17 @@ private void set_Datacenters_and_brokers() {
 		Mobiles_Info_List.get(Mobiles_Info_List.size()-1).getDatacenter().setName("Mobile_Device_"+i);
 		Mobiles_Info_List.get(Mobiles_Info_List.size()-1).set_the_path(Results);
 	}
+	int metatopish= (int) max_grid/20;
 	int number_1=max_grid/4;
 	int number_2=3*max_grid/4;
 	
-	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_1,number_1),Edge_Servers_Info_List.size()));
+	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_2-metatopish,number_1+metatopish),Edge_Servers_Info_List.size()));
 	Edge_Servers_Info_List.get(Edge_Servers_Info_List.size()-1).getDatacenter().setName("Edge_Server_1");
-	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_1,number_2),Edge_Servers_Info_List.size()));
+	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_1+metatopish,number_2-metatopish),Edge_Servers_Info_List.size()));
 	Edge_Servers_Info_List.get(Edge_Servers_Info_List.size()-1).getDatacenter().setName("Edge_Server_2");
-	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_2,number_1),Edge_Servers_Info_List.size()));
+	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_1+metatopish,number_1+metatopish),Edge_Servers_Info_List.size()));
 	Edge_Servers_Info_List.get(Edge_Servers_Info_List.size()-1).getDatacenter().setName("Edge_Server_3");
-	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_2,number_2),Edge_Servers_Info_List.size()));
+	Edge_Servers_Info_List.add(new Edge_Servers_Info(createDatacenter(1,number_2-metatopish,number_2-metatopish),Edge_Servers_Info_List.size()));
 	Edge_Servers_Info_List.get(Edge_Servers_Info_List.size()-1).getDatacenter().setName("Edge_Server_4");
 	Cloud_Servers_Info_List.add(new Cloud_Servers_Info(createDatacenter(20,Math.pow(TIME_TO_FINISH_SIMULATION,2),Math.pow(TIME_TO_FINISH_SIMULATION,2)),speed_3g,Scale_Cloud*speed_3g,0));
 	Cloud_Servers_Info_List.get(Cloud_Servers_Info_List.size()-1).getDatacenter().setName("Cloud_Server");
@@ -284,7 +288,7 @@ private void set_Datacenters_and_brokers() {
     	Edge_Servers_Info_List.get(i).add_zone(250,-79+40);
     	Edge_Servers_Info_List.get(i).add_zone(200,-81+40);
     	//Set properly the radious
-    	Edge_Servers_Info_List.get(i).set_radious(radious_scale*(i+1)); 
+    	Edge_Servers_Info_List.get(i).set_radious(radious_scale+ratio*(i+1)); 
     	Edge_Servers_Info_List.get(i).set_the_path(Results);
     }
     for(int i=0; i<Cloud_Servers_Info_List.size(); i++) Cloud_Servers_Info_List.get(i).setBroker(new DatacenterBrokerSimple(simulation,"Cloud_Broker_"+i)); 
@@ -353,7 +357,6 @@ private void check(double time) {
 	Temp_List_Of_Lonely_Mobiles.addAll(Temp_List_Of_Not_Fit_Mobiles_To_Edges);
 	Temp_List_Of_Not_Fit_Mobiles_To_Edges.forEach(mobile->mobile.checked());
 	no_fit_mobiles_counter+=Temp_List_Of_Not_Fit_Mobiles_To_Edges.size();
-	
 	for(int i=0; i<Temp_List_Of_Mobiles.size(); i++) {
 		if(!Temp_List_Of_Minimum_Values.isEmpty()) {
 			double s_min_of_min=Temp_List_Of_Minimum_Values.get(0);
@@ -407,6 +410,7 @@ private void check(double time) {
 	Mobiles_Info_List.forEach(mobile->mobile.check_mobile_for_random(true));
 	clear_the_temp_lists();
 }
+
 
 private void clear_the_temp_lists() {
 	Temp_List_Of_Minimum_Values.clear();
@@ -462,7 +466,9 @@ private void compute_objective_fuction_for_this_mobile(Mobiles_Info info) {
 							s_old=s_fn;
 							the_best_edge=Edge_Servers_Info_List.get(info.get_edge_point_to_mobile().get(i));
 						}
-						else if(random && i==temp) {
+						//else if(random && i==temp)--->In random mode it choose the first one from the available list
+						//else if(random)--->In random mode it choose the last one from the available list
+						else if(random) {
 							info.set_temp_time_data_zone_standard_deviation(t_send_back+t_so_far,assosiativity,s);
 							info.set_delay(t_send);
 							s_old=s_fn;
@@ -592,6 +598,7 @@ private void print_results() {
 	take_finished_cloudlets_from_all_brokers(simulation.clock());
 	compare_mobi_het_with_random(Mobi_Het_And_Random_Compare);
 	compare_mobi_het_with_random(random);
+	Mobiles_Info_List.forEach(mobile->total_energy+=mobile.get_the_energy());
 	long total_length_of_the_cloudlets_on_edges=0, total_size_of_the_cloudlets_on_edges_trensport=0;
 	for(Edge_Servers_Info edge:Edge_Servers_Info_List) { 
 		total_length_of_the_cloudlets_on_edges+=edge.get_total_length_of_executed_cloudlets();
@@ -633,6 +640,7 @@ private void print_results() {
 				writer.printf("\t\t--->>> %d total Mips have executed on all edges <<<<---- \n",total_length_of_the_cloudlets_on_edges);
 				writer.printf("\t\t--->>> %d total Bytes have transferd on all edges <<<<---- \n",total_size_of_the_cloudlets_on_edges_trensport);
 				writer.printf("\t\t--->>> %d total Cloudlets have created with %.0f total Mips <<<<---- \n",cloudletId+1,total_created_mips);
+				writer.printf("\t\t--->>> %.5f total Energy has consumed in all Mobile Devices <<<<---- \n",total_energy);
 				writer.printf("\t\t------------------------\n");
 			}
 			else if(random) {
@@ -643,6 +651,7 @@ private void print_results() {
 				writer.printf("\t\t--->>> %d total Mips have executed on all edges <<<<---- \n",total_length_of_the_cloudlets_on_edges);
 				writer.printf("\t\t--->>> %d total Bytes have transferd on all edges <<<<---- \n",total_size_of_the_cloudlets_on_edges_trensport);
 				writer.printf("\t\t--->>> %d total Cloudlets have created with %.0f total Mips <<<<---- \n",cloudletId+1,total_created_mips);
+				writer.printf("\t\t--->>> %.5f total Energy has consumed in all Mobile Devices <<<<---- \n",total_energy);
 				writer.printf("\t\t------------------------\n");
 			}
 			List<Double> ResultLista = information.get_the_percent_partiotion_of_edge_on_mobiles(Num_Of_Mobiles);
@@ -688,6 +697,7 @@ private void print_results() {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
+	
 	System.out.println('\n' + getClass().getSimpleName() + " finished!");
 }
      
@@ -726,7 +736,7 @@ private ArrayList<Vm> createVms(int category) {
     }
     else if(category==1) {
     	int id_vm=(createsVms-Num_Of_Mobiles*vms_for_mobiles)/vms_for_edges;
-    	mips = (int) (1000+Math.pow(id_vm, 2)*100); ram=1024; vms=vms_for_edges; 
+    	mips = (int) (800+id_vm*400); ram=1024; vms=vms_for_edges; 
     }
     else {
     	mips = 2000; ram=2048; vms=vms_for_cloud;
@@ -781,7 +791,7 @@ private Datacenter createDatacenter(int category,double x,double y) {
     else if(category==1) {
     	//Edge Server
     	int datacenter_id=createsDatacenters-Num_Of_Mobiles;
-    	mips = (long) (1000+Math.pow(datacenter_id, 2)*100); ram = 2048; storage = 1000000; bw = 10000; hosts=4;
+    	mips = (long) (800+datacenter_id*400); ram = 2048; storage = 1000000; bw = 10000; hosts=4;
 
     }
     else {
