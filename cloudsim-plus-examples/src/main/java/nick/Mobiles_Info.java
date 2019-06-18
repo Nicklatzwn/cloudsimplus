@@ -21,15 +21,15 @@ public class Mobiles_Info extends Device_Info{
 
 	private int BATTERY_LIFE; 
 	private int start_battery;
-    	private final int BATTERY_REDUCE_EXE=15;
-    	private final int BATTERY_REDUCE_SEND_RECEIVE_WIFI=1;
-    	private final int BATTERY_REDUCE_SEND_RECEIVE_3G=4;
-   	private final int BATTERY_REDUCE_IDLE_PERIOD=1;
-    	private List<Cloudlet> list_of_belonging_cloudlets;
-   	private List<Cloudlet> list_of_cloudlets_that_are_going_to_be_submitted;
-   	private List<Integer> pointer_to_Edge_Server;
-   	private final double rangeMin=5;
-	private final double rangeMax=10;
+    private final int BATTERY_REDUCE_EXE=15;
+    private final int BATTERY_REDUCE_SEND_RECEIVE_WIFI=1;
+    private final int BATTERY_REDUCE_SEND_RECEIVE_3G=4;
+    private final int BATTERY_REDUCE_IDLE_PERIOD=1;
+    private List<Cloudlet> list_of_belonging_cloudlets;
+    private List<Cloudlet> list_of_cloudlets_that_are_going_to_be_submitted;
+    private List<Integer> pointer_to_Edge_Server;
+    private final double rangeMin=11.5;
+	private final double rangeMax=13.5;
 	private double energy_for_Wifi_module;
 	private double energy_for_3g_module;
 	private double delay;
@@ -337,6 +337,12 @@ public class Mobiles_Info extends Device_Info{
 			}       
             i++;
         }      
+	}
+	public double get_the_energy() {
+		double value=0.0;
+		for(int i=0; i<getDatacenter().getHostList().size(); i++) value+=PowerAware.wattsSecToKWattsHour(super.getTotalPowerForTheHost(i));
+		value+= PowerAware.wattsSecToKWattsHour(energy_for_Wifi_module)+PowerAware.wattsSecToKWattsHour(energy_for_3g_module);
+		return value;
 	}
 	
 	public int start_battery() {
